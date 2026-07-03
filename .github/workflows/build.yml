@@ -34,13 +34,13 @@ jobs:
 
       - name: Build Application
         run: |
-          pyinstaller ^
-            --clean ^
-            --noconfirm ^
-            --onedir ^
-            --windowed ^
-            --name "CPHI Beta" ^
-            --collect-all streamlit ^
+          pyinstaller 
+            --clean 
+            --noconfirm 
+            --onedir 
+            --windowed 
+            --name "CPHI Beta" 
+            --collect-all streamlit 
             run.py
 
       - name: Copy Project Files

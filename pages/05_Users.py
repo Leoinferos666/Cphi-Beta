@@ -4,10 +4,9 @@ from utils.auth import (
     require_admin
 )
 
-from utils.database import (
-    supabase
-)
+from utils.database import get_supabase
 
+supabase = get_supabase()
 from utils.admin_database import (
     admin_supabase
 )

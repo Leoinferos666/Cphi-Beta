@@ -1,9 +1,8 @@
 import uuid
 
-from utils.database import (
-    supabase
-)
+from utils.database import get_supabase
 
+supabase = get_supabase()
 
 def upload_file(
     uploaded_file,

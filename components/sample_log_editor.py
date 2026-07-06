@@ -12,11 +12,9 @@ from utils.sample_log import (
 
 )
 
-from utils.database import (
-    supabase
-)
+from utils.database import get_supabase
 
-
+supabase = get_supabase()
 def render(
     borehole,
     samples

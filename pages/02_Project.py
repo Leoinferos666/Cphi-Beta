@@ -11,7 +11,7 @@ st.set_page_config(
 )
 # st.write("")
 # st.write("")
-# @st.cache_data(ttl=30)    
+@st.cache_data(ttl=30)    
 def load_project_data(project_id):
 
     project = (

@@ -4,10 +4,9 @@ from utils.auth import (
     is_admin
 )
 
-from utils.database import (
-    supabase
-)
+from utils.database import get_supabase
 
+supabase = get_supabase()
 from utils.sample_log import (
     get_sample_log,
     delete_sample_log,

@@ -1,6 +1,8 @@
 import streamlit as st
 
-from utils.database import supabase
+from utils.database import get_supabase
+
+supabase = get_supabase()
 
 from tests.direct_shear.calculations import (
     calculate_peak_shear_stress,

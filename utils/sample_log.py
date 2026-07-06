@@ -1,4 +1,6 @@
-from utils.database import supabase
+from utils.database import get_supabase
+
+supabase = get_supabase()
 
 def generate_sample_log(
     borehole_id,

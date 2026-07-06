@@ -1,27 +1,36 @@
 import streamlit as st
-from utils.database import supabase
+from utils.database import get_supabase
+
+supabase = get_supabase()
 
 
 def login(email, password):
 
     try:
 
-        response = (
-            supabase.auth.sign_in_with_password({
+        response = supabase.auth.sign_in_with_password({
 
-                "email": email,
-                "password": password
+            "email": email,
 
-            })
-        )
+            "password": password
 
-        return response
+        })
+
+        if response.user:
+
+            st.session_state["user"] = response.user
+
+            st.session_state["session"] = response.session
+
+            return True
+
+        return False
 
     except Exception as e:
 
         st.error(str(e))
-        return None
 
+        return False
 
 def logout():
 
@@ -41,17 +50,7 @@ def logout():
 
 def get_current_user():
 
-    try:
-
-        response = (
-            supabase.auth.get_user()
-        )
-
-        return response.user
-
-    except:
-
-        return None
+    return st.session_state.get("user")
 
 
 def load_user_profile():

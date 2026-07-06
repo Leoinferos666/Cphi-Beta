@@ -1,6 +1,8 @@
 import streamlit as st
 
-from utils.database import supabase
+from utils.database import get_supabase
+
+supabase = get_supabase()
 
 from tests.plastic_limit.calculations import (
     calculate_water_content,

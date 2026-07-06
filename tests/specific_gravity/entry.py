@@ -1,5 +1,7 @@
 import streamlit as st
-from utils.database import supabase
+from utils.database import get_supabase
+
+supabase = get_supabase()
 from tests.specific_gravity.calculations import (
     calculate_specific_gravity
 )

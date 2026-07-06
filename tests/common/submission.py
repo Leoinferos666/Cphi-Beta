@@ -1,4 +1,6 @@
-from utils.database import supabase
+from utils.database import get_supabase
+
+supabase = get_supabase()
 
 def get_or_create_submission(
     project_id,

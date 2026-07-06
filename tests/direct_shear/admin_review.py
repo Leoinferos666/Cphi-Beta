@@ -1,6 +1,8 @@
 
 import streamlit as st
-from utils.database import supabase
+from utils.database import get_supabase
+
+supabase = get_supabase()
 import matplotlib.pyplot as plt
 import numpy as np
 def render(review, project, borehole):

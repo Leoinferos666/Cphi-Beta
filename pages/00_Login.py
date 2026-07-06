@@ -28,17 +28,21 @@ if st.button(
     use_container_width=True
 ):
 
-    response = login(
-        email,
-        password
+   response = login(
+    email,
+    password
+)
+
+if response:
+
+    st.session_state["user"] = response.user
+
+    st.session_state["session"] = response.session
+
+    st.success(
+        "Login Successful"
     )
 
-    if response:
-
-        st.success(
-            "Login Successful"
-        )
-
-        st.switch_page(
-            "pages/01_Dashboard.py"
-        )
+    st.switch_page(
+        "pages/01_Dashboard.py"
+    )

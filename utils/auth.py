@@ -38,21 +38,9 @@ def logout():
 
         del st.session_state[key]
 
-
 def get_current_user():
 
-    try:
-
-        response = (
-            supabase.auth.get_user()
-        )
-
-        return response.user
-
-    except:
-
-        return None
-
+    return st.session_state.get("user")
 
 def load_user_profile():
 

@@ -21,6 +21,8 @@ apply_theme()
 # =====================================
 
 user = get_current_user()
+st.write("Session ID:", id(supabase))
+st.write("User:", user.email if user else "None")
 
 if not user:
     st.switch_page("pages/00_Login.py")

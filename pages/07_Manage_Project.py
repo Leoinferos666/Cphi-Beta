@@ -1,6 +1,7 @@
 import streamlit as st
 
-from utils.database import supabase
+from utils.database import get_supabase
+supabase = get_supabase()
 
 from utils.auth import (
     require_admin

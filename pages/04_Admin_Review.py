@@ -1036,12 +1036,16 @@ elif review["test_name"] == "Liquid Limit":
             st.metric(
                 "Liquid Limit",
                 f"{submission['liquid_limit']:.2f} %"
-            )
+                if submission.get("liquid_limit") is not None
+                else "-"
+            )   
 
         with c2:
             st.metric(
                 "Flow Index",
                 round(submission["flow_index"], 2)
+                if submission.get("flow_index") is not None
+                else "-"
             )
             trials = (
 

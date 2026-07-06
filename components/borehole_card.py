@@ -312,5 +312,6 @@ def render(
             st.divider()
 
             render_sample_log(
-                bh
+                bh,
+                samples
             )

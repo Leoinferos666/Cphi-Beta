@@ -5,7 +5,11 @@ from utils.ui import apply_theme
 
 from tests.gsa.report import render_gsa_report
 from tests.liquid_limit.report import render_report
+# from tests.plastic_limit.admin_review import render as render_pl_review   
+from tests.plastic_limit.admin_review import render as render_pl_review
+from tests.direct_shear.admin_review import render as render_ds_review
 import pandas as pd
+
 
 st.set_page_config(
     page_title="...",
@@ -13,6 +17,8 @@ st.set_page_config(
 )
 
 apply_theme()
+
+
 # =====================================
 # Clear stale navigation state
 # =====================================
@@ -549,7 +555,11 @@ if review["test_name"] == "Specific Gravity":
     # =====================================
     # GRAIN SIZE ANALYSIS REVIEW
     # =====================================
-
+if review["test_name"].strip().lower() == "direct shear":
+    render_ds_review(review, project, borehole)
+elif review["test_name"] == "Plastic Limit":
+    render_pl_review(review, project, borehole)
+    
 elif review["test_name"] == "Grain Size Analysis":
 
         st.subheader(
@@ -1152,3 +1162,5 @@ elif review["test_name"] == "Liquid Limit":
                 )
 
                 st.rerun()
+                
+                

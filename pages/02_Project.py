@@ -127,7 +127,31 @@ project_id = st.session_state["selected_project"]
 ) = load_project_data(project_id)
 st.title(project["project_name"])
 st.caption(project.get("client_name", ""))
-st.divider()
+c1, c2, c3 = st.columns([1,1,5])
+
+with c1:
+    if st.button(
+        "📊 Project Summary",
+        use_container_width=True
+    ):
+        st.session_state["summary_project"] = project_id
+        st.switch_page("pages/06_Project_Summary.py")
+    with c2:
+
+        if is_admin():
+
+            if st.button(
+
+                "⚙ Manage Project",
+
+                use_container_width=True
+
+            ):
+
+                st.switch_page(
+                    "pages/07_Manage_Project.py"
+                )
+    st.divider()
 assignment_lookup = {
 
     a["test_name"]: a
@@ -470,7 +494,9 @@ else:
                             "Specific Gravity",
 
                             "Grain Size Analysis",
-                            "Liquid Limit"
+                            "Liquid Limit",
+                            "Plastic Limit",
+                            "Direct Shear Test"
 
                         ]:
 

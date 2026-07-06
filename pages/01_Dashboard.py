@@ -45,19 +45,19 @@ if st.sidebar.button("Logout"):
 # =====================================
 
 TESTS = [
-    "Moisture Content",
+    # "Moisture Content",
     "Liquid Limit",
     "Plastic Limit",
     "Specific Gravity",
     "Grain Size Analysis",
-    "Compaction Test",
-    "CBR",
-    "Triaxial Test",
+    # "Compaction Test",
+    # "CBR",
+    # "Triaxial Test",
     "Direct Shear Test",
-    "UCS",
-    "Permeability",
-    "Rock Core Test",
-    "Chemical Analysis"
+    # "UCS",
+    # "Permeability",
+    # "Rock Core Test",
+    # "Chemical Analysis"
 ]
 current_user = load_user_profile()
 # =====================================
@@ -118,6 +118,22 @@ else:
             data = []
 
         projects = EmptyProjects()
+all_boreholes = (
+    supabase
+    .table("boreholes")
+    .select("project_id")
+    .execute()
+).data
+
+borehole_lookup = {}
+
+for bh in all_boreholes:
+
+    pid = bh["project_id"]
+
+    borehole_lookup[pid] = (
+        borehole_lookup.get(pid, 0) + 1
+    )
 
 # =====================================
 # HEADER
@@ -137,11 +153,17 @@ st.divider()
 # =====================================
 
 project_count = len(projects.data)
-total_boreholes = sum(
-    p["num_boreholes"]
-    for p in projects.data
-)
+total_boreholes = (
 
+    supabase
+
+    .table("boreholes")
+
+    .select("id", count="exact")
+
+    .execute()
+
+).count
 c1, c2 = st.columns(2)
 
 with c1:
@@ -203,7 +225,7 @@ if is_admin():
                             "project_name": project_name,
                             "client_name": client_name,
                             "location": location,
-                            "num_boreholes": int(num_boreholes)
+                            # "num_boreholes": int(num_boreholes)
                         })
                         .execute()
                     )
@@ -257,60 +279,58 @@ st.subheader("Projects")
 if not projects.data:
     st.info("No Projects Created Yet")
 
-for project in projects.data:
+cols = st.columns(2)
 
-    with st.container(border=True):
+for idx, project in enumerate(projects.data):
 
-        left, mid, right = st.columns([4, 1, 1])
+    with cols[idx % 2]:
 
-        with left:
+        with st.container(border=True):
 
-            st.write(
-                f"### {project['project_name']}"
+            # c1, c2 = st.columns(2)
+
+            st.subheader(project["project_name"])
+
+            st.caption(project.get("client_name", "-"))
+
+            st.write(f"📍 {project.get('location', '-')}")
+
+            borehole_count = borehole_lookup.get(
+                project["id"],
+                0
             )
 
-            st.write(
-                f"Client: {project.get('client_name', '-')}"
-            )
+            st.write(f"🕳 Boreholes : {borehole_count}")
 
-            st.write(
-                f"Location: {project.get('location', '-')}"
-            )
+            st.write("")
 
-            st.write(
-                f"Boreholes: {project.get('num_boreholes', 0)}"
-            )
+            c1, c2 = st.columns(2)
 
-        with mid:
-
-            if st.button(
-                "Open",
-                key=f"open_{project['id']}",
-                use_container_width=True
-            ):
-
-                st.session_state[
-                    "selected_project"
-                ] = project["id"]
-
-                st.switch_page(
-                    "pages/02_Project.py"
-                )
-
-        with right:
-
-            if is_admin():
+            with c1:
 
                 if st.button(
-                    "Delete",
-                    key=f"delete_{project['id']}",
+                    "Open",
+                    key=f"open_{project['id']}",
                     use_container_width=True
                 ):
 
-                    st.session_state[
-                        f"confirm_{project['id']}"
-                    ] = True
+                    st.session_state["selected_project"] = project["id"]
 
+                    st.switch_page("pages/02_Project.py")
+
+            with c2:
+
+                if is_admin():
+
+                    if st.button(
+                        "Delete",
+                        key=f"delete_{project['id']}",
+                        use_container_width=True
+                    ):
+
+                        st.session_state[
+                            f"confirm_{project['id']}"
+                        ] = True
         if (
             is_admin()
             and

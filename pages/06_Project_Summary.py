@@ -97,6 +97,10 @@ samples = (
     .execute()
 
 ).data
+# st.write("Project ID:", project_id)
+# st.write("Boreholes:", len(boreholes))
+# st.write("Borehole IDs:", borehole_ids)
+# st.write("Samples:", len(samples))
 gsa_submissions = (
 
     supabase
@@ -123,6 +127,63 @@ gsa_lookup = {
 
     for g in gsa_submissions
 
+}
+# =====================================
+# LOAD LIQUID LIMIT
+# =====================================
+
+ll_submissions = (
+    supabase
+    .table("ll_submissions")
+    .select("*")
+    .eq("project_id", project_id)
+    .execute()
+).data
+
+ll_lookup = {
+    (
+        row["borehole_id"],
+        row["sample_id"]
+    ): row
+    for row in ll_submissions
+}
+# =====================================
+# LOAD PLASTIC LIMIT
+# =====================================
+
+pl_submissions = (
+    supabase
+    .table("pl_submissions")
+    .select("*")
+    .eq("project_id", project_id)
+    .execute()
+).data
+
+pl_lookup = {
+    (
+        row["borehole_id"],
+        row["sample_id"]
+    ): row
+    for row in pl_submissions
+}   
+# =====================================
+# LOAD DIRECT SHEAR
+# =====================================
+
+ds_submissions = (
+    supabase
+    .table("ds_submissions")
+    .select("*")
+    .eq("project_id", project_id)
+    .execute()
+).data
+
+ds_lookup = {
+    (
+        row["borehole_id"],
+        row["sample_id"]
+    ): row
+    for row in ds_submissions
 }
 # =====================================
 # LOAD SG TESTS
@@ -173,7 +234,9 @@ borehole_lookup = {
 summary_rows = []
 
 for sample in samples:
-
+    # st.write(sample["sample_id"])
+    # st.write("Appending...")
+    # st.write("Loop:", sample["sample_id"])
     bh = borehole_lookup.get(
 
     sample["borehole_id"]
@@ -242,7 +305,7 @@ for sample in samples:
 
         if sg_values
 
-        else None
+        else "-"
 
     )
 
@@ -263,126 +326,116 @@ for sample in samples:
 )
 
     # =========================
+    # LIQUID LIMIT
+    # =========================
+
+    ll = ll_lookup.get(
+        (
+            sample["borehole_id"],
+            sample["sample_id"]
+        )
+    )
+
+    # =========================
+    # PLASTIC LIMIT
+    # =========================
+
+    pl = pl_lookup.get(
+        (
+            sample["borehole_id"],
+            sample["sample_id"]
+        )
+    )
+    # =========================
+    # DIRECT SHEAR
+    # =========================
+
+    ds = ds_lookup.get(
+        (
+            sample["borehole_id"],
+            sample["sample_id"]
+        )
+    )
+
+    pi = None
+
+    if (
+        ll
+        and pl
+        and ll.get("liquid_limit") is not None
+        and pl.get("plastic_limit") is not None
+    ):
+        pi = round(
+            ll["liquid_limit"] - pl["plastic_limit"],
+            2
+        )
+        
+
+    # =========================
     # STATUS
     # =========================
 
     statuses = [
-
-        r.get(
-            "approval_status"
-        )
-
+        r.get("approval_status")
         for r in sg_rows
-
     ]
 
     if not statuses:
-
         status = "Not Started"
 
-    elif any(
-
-        s == "Returned"
-
-        for s in statuses
-
-    ):
-
+    elif any(s == "Returned" for s in statuses):
         status = "Returned"
 
-    elif all(
-
-        s == "Approved"
-
-        for s in statuses
-
-    ):
-
+    elif all(s == "Approved" for s in statuses):
         status = "Approved"
 
     else:
-
         status = "Pending"
 
-    # =========================
-    # SUMMARY ROW
-    # =========================
-
     summary_rows.append({
+        "Sample_DB_ID": sample["id"],
+        "Sample ID": sample.get("sample_id"),
+        "Borehole": bh_name,
+        "Depth": sample["depth"],
+        "Type": sample["sample_type"],
 
-        "Sample ID":
-        sample.get(
-            "sample_id"
-        ),
+        "SPT-N": sample.get("spt_n_value"),
+        "Bulk Density": sample.get("bulk_density"),
+        "Dry Unit Wt": sample.get("dry_unit_weight"),
+        "Water Content": sample.get("insitu_water_content"),
 
-        "Borehole":
-        bh_name,
+        "Gravel %": gsa.get("gravel_percent") if gsa else "-",
+        "Sand %": gsa.get("sand_percent") if gsa else "-",
+        "Silt + Clay %": gsa.get("silt_clay_percent") if gsa else "-",
 
-        "Depth":
-        sample["depth"],
+        "Specific Gravity": avg_sg,
 
-        "Type":
-        sample["sample_type"],
+        "Liquid Limit":
+            round(ll["liquid_limit"], 2)
+            if ll and ll.get("liquid_limit") is not None
+            else "-",
 
-        "SPT-N":
-        sample.get(
-            "spt_n_value"
-        ),
+        "Plastic Limit":
+            round(pl["plastic_limit"], 2)
+            if pl and pl.get("plastic_limit") is not None
+            else "-",
 
-        "Bulk Density":
-        sample.get(
-            "bulk_density"
-        ),
+        "Plasticity Index": pi,
+        "Cohesion,c (kg/cm²)":
+            round(ds["cohesion"], 3)
+            if ds and ds.get("cohesion") is not None
+            else "-",
 
-        "Dry Unit Wt":
-        sample.get(
-            "dry_unit_weight"
-        ),
+        "Internal Friction Angle, φ (°)":   
+            round(ds["phi"], 2)
+            if ds and ds.get("phi") is not None
+            else "-",
 
-        "Water Content":
-        sample.get(
-            "insitu_water_content"
-        ),
-
-        "Gravel %":
-        (
-            gsa.get(
-                "gravel_percent"
-            )
-            if gsa
-            else None
-        ),
-
-        "Sand %":
-        (
-            gsa.get(
-                "sand_percent"
-            )
-            if gsa
-            else None
-        ),
-
-        "Silt + Clay %":
-        (
-            gsa.get(
-                "silt_clay_percent"
-            )
-            if gsa
-            else None
-        ),
-
-        "Specific Gravity":
-        avg_sg,
-
-        "Status":
-        status,
-
-        "Remarks":
-        sample.get(
-            "remarks"
-        )
+        # "Status": status,
+        # "Remarks": sample.get("remarks")
 
     })
+
 # =====================================
 # DISPLAY
 # =====================================
@@ -397,15 +450,65 @@ if summary_rows:
         summary_rows
     )
 
-    st.dataframe(
+    edited_df = st.data_editor(
 
         df,
 
         use_container_width=True,
 
-        hide_index=True
+        hide_index=True,
+        column_config={
+            "Sample_DB_ID": None
+        },
+
+        disabled=[
+
+            "Sample ID",
+            "Borehole",
+            "Depth",
+            "Type",
+            # "Water Content",
+            "Gravel %",
+            "Sand %",
+            "Silt + Clay %",
+            "Specific Gravity",
+            "Liquid Limit",
+            "Plastic Limit",
+            "Plasticity Index",
+            "Direct Shear c",
+            "Direct Shear φ",
+            "Status",
+            "Remarks"
+
+        ]
 
     )
+    if st.button(
+        "💾 Save Summary Changes",
+        use_container_width=True
+    ):
+        
+        for _, row in edited_df.iterrows():
+
+            (
+                supabase
+                .table("borehole_samples")
+                .update({
+
+                    "spt_n_value": row["SPT-N"],
+
+                    "bulk_density": row["Bulk Density"],
+
+                    "dry_unit_weight": row["Dry Unit Wt"]
+
+                })
+                .eq("sample_id", row["Sample_DB_ID"])
+                .execute()
+            )
+
+        st.success("Summary updated successfully.")
+
+        st.rerun()
 
 else:
 

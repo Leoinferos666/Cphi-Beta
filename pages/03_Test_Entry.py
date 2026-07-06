@@ -1,6 +1,8 @@
 import streamlit as st
 
 from utils.ui import apply_theme
+from tests.liquid_limit.sample_selection import render
+from tests.direct_shear.sample_selection import render as render_ds
 
 st.set_page_config(
     page_title="...",
@@ -39,10 +41,13 @@ elif selected_test == "Liquid Limit":
 
     st.success("Reached Liquid Limit routing")
 
-    from tests.liquid_limit.sample_selection import render
-
+    
     render()
 
+    st.stop()
+elif selected_subpage == "ds":
+    from tests.direct_shear.entry import render
+    render()
     st.stop()
 # =====================================
 # GSA ENTRY PAGE
@@ -63,7 +68,24 @@ elif selected_test == "Specific Gravity":
     from tests.specific_gravity.entry import render
 
     render()
+    
+elif selected_subpage == "pl":
 
+    from tests.plastic_limit.entry import render
+
+    render()
+
+    st.stop()
+
+elif selected_test == "Plastic Limit":
+
+    from tests.plastic_limit.sample_selection import render
+
+    render()
+
+    st.stop()
+elif selected_test == "Direct Shear Test":
+    render_ds()
 # =====================================
 # GSA MAIN PAGE
 # =====================================
@@ -73,6 +95,7 @@ elif selected_test == "Grain Size Analysis":
     from tests.gsa.sample_selection import render
 
     render()
+
 
 # =====================================
 # FUTURE TESTS

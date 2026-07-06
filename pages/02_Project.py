@@ -11,7 +11,7 @@ st.set_page_config(
 )
 # st.write("")
 # st.write("")
-@st.cache_data(ttl=30)
+# @st.cache_data(ttl=30)    
 def load_project_data(project_id):
 
     project = (
@@ -34,7 +34,7 @@ def load_project_data(project_id):
 
         bh["id"]
 
-        for bh in boreholes
+for bh in boreholes
 
     ]
 
@@ -125,33 +125,35 @@ project_id = st.session_state["selected_project"]
     assignments,
     technicians
 ) = load_project_data(project_id)
+
 st.title(project["project_name"])
 st.caption(project.get("client_name", ""))
-c1, c2, c3 = st.columns([1,1,5])
+
+c1, c2, c3 = st.columns([1, 1, 5])
 
 with c1:
+
     if st.button(
         "📊 Project Summary",
         use_container_width=True
     ):
         st.session_state["summary_project"] = project_id
         st.switch_page("pages/06_Project_Summary.py")
-    with c2:
 
-        if is_admin():
 
-            if st.button(
+with c2:
 
-                "⚙ Manage Project",
+    if is_admin():
 
-                use_container_width=True
+        if st.button(
+            "⚙ Manage Project",
+            use_container_width=True
+        ):
+            st.switch_page(
+                "pages/07_Manage_Project.py"
+            )
 
-            ):
-
-                st.switch_page(
-                    "pages/07_Manage_Project.py"
-                )
-    st.divider()
+st.divider()
 assignment_lookup = {
 
     a["test_name"]: a
@@ -173,6 +175,10 @@ assignment_user_lookup = {
 
 }
 current_user = load_user_profile()
+# st.write("Profile:", current_user)
+if current_user is None:
+    st.error("Profile is None")
+    st.stop()
 # =====================================
 # LOAD TECHNICIANS
 # =====================================
@@ -217,6 +223,7 @@ if is_admin():
     with st.expander(
         "⚙ Test Settings"
     ):
+        # st.write("Entered Test Settings")
 
         
 
@@ -311,7 +318,7 @@ if is_admin():
                 "Save",
                 key=f"save_{test['id']}"
             ):
-                        (
+                (
                 supabase
                 .table(
                     "test_assignments"
@@ -326,55 +333,55 @@ if is_admin():
                     test["test_name"]
                 )
                 .execute()
-            )
-
-            if selected_tech != "Unassigned":
-                technician = technician_name_lookup[
-                    selected_tech
-                ]
-                (
-                    supabase
-                    .table(
-                        "test_assignments"
-                    )
-                    .insert({
-
-                        "project_id":
-                        project_id,
-
-                        "test_name":
-                        test["test_name"],
-
-                        "assigned_user_id":
-                        technician["id"]
-
-                    })
-                    .execute()
-                )
-                (
-                    supabase
-                    .table("project_tests")
-                    .update({
-
-                        "image_requirement":
-                        image_req,
-
-                        "graph_requirement":
-                        graph_req
-
-                    })
-                    .eq(
-                        "id",
-                        test["id"]
-                    )
-                    .execute()
                 )
 
-                st.success(
-                    "Updated"
-                )
-                st.cache_data.clear()
-                st.rerun()
+                if selected_tech != "Unassigned":
+                        technician = technician_name_lookup[
+                            selected_tech
+                        ]
+                        (
+                            supabase
+                            .table(
+                                "test_assignments"
+                            )
+                            .insert({
+
+                                "project_id":
+                                project_id,
+
+                                "test_name":
+                                test["test_name"],
+
+                                "assigned_user_id":
+                                technician["id"]
+
+                            })
+                            .execute()
+                        )
+                        (
+                            supabase
+                            .table("project_tests")
+                            .update({
+
+                                "image_requirement":
+                                image_req,
+
+                                "graph_requirement":
+                                graph_req
+
+                            })
+                            .eq(
+                                "id",
+                                test["id"]
+                            )
+                            .execute()
+                        )
+
+                        st.success(
+                            "Updated"
+                        )
+                        st.cache_data.clear()
+                        st.rerun()
 
             st.divider()
 
@@ -524,7 +531,7 @@ st.subheader(
     "Boreholes"
 )
 
-         
+        
 ## =====================================
 # BOREHOLE LIST
 # =====================================
@@ -532,7 +539,9 @@ st.subheader(
 from components.borehole_card import (
     render as render_borehole_card
 )
-
+# st.write("Project ID:", project_id)
+# st.write("Boreholes loaded:", len(boreholes))
+# st.write(boreholes)
 for bh in boreholes:
 
     render_borehole_card(

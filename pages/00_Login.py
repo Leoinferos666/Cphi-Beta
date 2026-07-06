@@ -28,12 +28,15 @@ if st.button(
     use_container_width=True
 ):
 
-    response = login(
+    success = login(
         email,
         password
     )
+    # st.write(type(success))
+    # st.write(success)
+    # st.stop()
 
-    if response:
+    if success:
 
         st.success(
             "Login Successful"

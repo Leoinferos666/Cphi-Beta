@@ -489,12 +489,12 @@ def render():
                                     .update({
 
                                         "material_type": material_type,
-                                        "sample_type": sample_type,
 
-                                        "rock_number":
-                                            rock_number if is_rock else None
+                                        # "sample_type": sample_type,
 
-                                    })
+                                        "rock_number": rock_number if is_rock else None
+
+                                        })
                                     .eq(
                                         "id",
                                         depth_id

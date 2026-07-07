@@ -567,15 +567,15 @@ elif review["test_name"] == "Grain Size Analysis":
         st.subheader(
             "Grain Size Analysis"
         )
-        st.write(
-    "Review Project ID:",
-    review["project_id"]
-)
+#         st.write(
+#     "Review Project ID:",
+#     review["project_id"]
+# )
 
-        st.write(
-            "Review Borehole ID:",
-            review["borehole_id"]
-        )
+#         st.write(
+#             "Review Borehole ID:",
+#             review["borehole_id"]
+#         )
 
         submissions = (
 
@@ -631,6 +631,9 @@ elif review["test_name"] == "Grain Size Analysis":
 
                     st.write(
                         f"### {submission['sample_id']} | Depth {submission['depth']} m"
+                    )
+                    st.caption(
+                        f"Sample Type : {submission.get('sample_type','Soil')}"
                     )
 
                     c1, c2, c3 = st.columns(3)
@@ -771,6 +774,15 @@ elif review["test_name"] == "Grain Size Analysis":
                                         "Approved"
 
                                     })
+                                    (
+                                        supabase
+                                        .table("reviews")
+                                        .update({
+                                            "status": "Approved"
+                                        })
+                                        .eq("id", review["id"])
+                                        .execute()
+                                    )
                                     .eq(
                                         "id",
                                         submission["id"]
@@ -808,6 +820,15 @@ elif review["test_name"] == "Grain Size Analysis":
                                         "Draft"
 
                                     })
+                                    (
+                                        supabase
+                                        .table("reviews")
+                                        .update({
+                                            "status": "Returned"
+                                        })
+                                        .eq("id", review["id"])
+                                        .execute()
+                                    )
                                     .eq(
                                         "id",
                                         submission["id"]
@@ -821,147 +842,7 @@ elif review["test_name"] == "Grain Size Analysis":
 
                                 st.rerun() 
          
-                    st.divider()
-
-                    reviewer_comment = st.text_area(
-                        "Reviewer Comments"
-                    )
-
-                    c1, c2 = st.columns(2)
-
-        # =====================================
-        # APPROVE
-        # =====================================
-
-        with c1:
-
-            if False:
-                (
-                    supabase
-                    .table("reviews")
-                    .update({
-
-                        "status":
-                        "Approved",
-
-                        "comments":
-                        reviewer_comment
-
-                    })
-                    .eq(
-                        "id",
-                        review["id"]
-                    )
-                    .execute()
-                )
-
-                (
-                    supabase
-                    .table(
-                        "specific_gravity_submissions"
-                    )
-                    .update({
-
-                        "review_status":
-                        "Approved",
-
-                        "reviewer_comments":
-                        reviewer_comment,
-
-                        "is_locked":
-                        True
-
-                    })
-                    .eq(
-                        "project_id",
-                        review["project_id"]
-                    )
-                    .eq(
-                        "borehole_id",
-                        review["borehole_id"]
-                    )
-                    .execute()
-                )
-
-                st.success(
-                    "Review Approved"
-                )
-
-                st.session_state.pop(
-                    "review_id",
-                    None
-                )
-
-                st.rerun()
-
-        # =====================================
-        # REJECT
-        # =====================================
-
-        with c2:
-
-            if False:
-
-                (
-                    supabase
-                    .table("reviews")
-                    .update({
-
-                        "status":
-                        "Rejected",
-
-                        "comments":
-                        reviewer_comment
-
-                    })
-                    .eq(
-                        "id",
-                        review["id"]
-                    )
-                    .execute()
-                )
-
-                (
-                    supabase
-                    .table(
-                        "specific_gravity_submissions"
-                    )
-                    .update({
-
-                        "status":
-                        "Draft",
-
-                        "is_locked":
-                        False,
-
-                        "review_status":
-                        "Rejected",
-
-                        "reviewer_comments":
-                        reviewer_comment
-
-                    })
-                    .eq(
-                        "project_id",
-                        review["project_id"]
-                    )
-                    .eq(
-                        "borehole_id",
-                        review["borehole_id"]
-                    )
-                    .execute()
-                )
-
-                st.warning(
-                    "Returned To Technician"
-                )
-
-                st.session_state.pop(
-                    "review_id",
-                    None
-                )
-
-                st.rerun()
+                    
 elif review["test_name"] == "Liquid Limit":
     st.subheader("Liquid Limit")
 
@@ -1009,7 +890,17 @@ elif review["test_name"] == "Liquid Limit":
 
             with c2:
                 st.write(f"**Depth:** {sample.get('depth', '-')}")
+                st.write(
+                            f"**Material:** {depth_record.get('material_type', 'Soil')}"
+                        )
+
+                if depth_record.get("material_type") == "Rock":
+                    st.write(
+                        f"**Rock Number:** {depth_record.get('rock_number', '-')}"
+                    )
+
                 st.write(f"**Sample Type:** {sample.get('sample_type', '-')}")
+                
                 st.write(f"**SPT N Value:** {sample.get('spt_n_value', '-')}")
 
             with c3:

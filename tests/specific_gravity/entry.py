@@ -243,6 +243,7 @@ def render():
                     "Create SG Test Entries"
                 )
             )
+            
 
         if add_samples:
 
@@ -254,12 +255,17 @@ def render():
 
                     "submission_id":
                     submission_id,
+                    "sample_id":
+                    sample["sample_id"],
 
                     "depth":
                     sample["depth"],
 
                     "sample_type":
-                    sample["sample_type"]
+                    sample["sample_type"],
+                    
+                     "rock_number":
+                    sample.get("rock_number")   
 
                 })
 
@@ -357,8 +363,25 @@ def render():
             with c1:
 
                 st.write(
-                    f"### {depth_row['depth']} m - {depth_row['sample_type']}"
+                    f"### {depth_row.get('sample_id', '-')}"
                 )
+
+                st.caption(
+                    f"Depth : {depth_row['depth']} m"
+                )
+
+                st.caption(
+                    f"Sample Type : {depth_row.get('sample_type', 'Soil')}"
+                )
+
+                if (
+                    depth_row.get("sample_type") == "Rock"
+                    and depth_row.get("rock_number")
+                ):
+
+                    st.caption(
+                        f"Rock No : {depth_row['rock_number']}"
+                    )
 
                 trial_count = trial_lookup.get(
 

@@ -113,6 +113,9 @@ def render():
 ) = load_depth_data(
     depth_id
 )
+    is_rock = (
+        depth_record.get("material_type") == "Rock"
+    )
     # =====================================
     # LOAD TRIALS
     # =====================================
@@ -297,6 +300,25 @@ def render():
             "approval_status"
         ) == "Returned"
     )
+    material_type = st.radio(
+            "Material",
+            ["Soil", "Rock"],
+            index=1 if depth_record.get("material_type") == "Rock" else 0,
+            horizontal=True,
+            key=f"material_{depth_id}"
+        )
+
+    is_rock = material_type == "Rock"
+
+    rock_number = depth_record.get("rock_number") or ""
+
+    if is_rock:
+        rock_number = st.text_input(
+            "Rock Number",
+            value=rock_number
+        )
+
+        st.divider()
     # =====================================
     # FORM
     # =====================================
@@ -304,7 +326,15 @@ def render():
     with st.form(
         "depth_form"
     ):
+        # =====================================
+# ROCK INFORMATION
+# =====================================
 
+                # =====================================
+# SAMPLE TYPE
+# =====================================
+
+               
                 st.subheader("Trial 1")
 
                 t1_m1 = st.number_input(
@@ -453,7 +483,24 @@ def render():
                     #     )
                     #     .execute()
                     # )
+                                (
+                                    supabase
+                                    .table("specific_gravity_depths")
+                                    .update({
 
+                                        "material_type": material_type,
+                                        "sample_type": sample_type,
+
+                                        "rock_number":
+                                            rock_number if is_rock else None
+
+                                    })
+                                    .eq(
+                                        "id",
+                                        depth_id
+                                    )
+                                    .execute()
+                                )
                                 trial_data = [
 
                                     (t1,1,t1_m1,t1_m2,t1_m3,t1_m4),

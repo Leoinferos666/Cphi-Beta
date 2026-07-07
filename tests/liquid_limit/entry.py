@@ -593,12 +593,14 @@ def render():
                 .execute()
             )
 
+            # existing_review = (
             existing_review = (
                 supabase
                 .table("reviews")
                 .select("*")
                 .eq("project_id", st.session_state["selected_project"])
                 .eq("borehole_id", sample["borehole_id"])
+                .eq("sample_id", sample["sample_id"])
                 .eq("test_name", "Liquid Limit")
                 .execute()
             ).data
@@ -611,6 +613,7 @@ def render():
                     .insert({
                         "project_id": st.session_state["selected_project"],
                         "borehole_id": sample["borehole_id"],
+                        "sample_id": sample["sample_id"],
                         "test_name": "Liquid Limit",
                         "status": "Pending"
                     })

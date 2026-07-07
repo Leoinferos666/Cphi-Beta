@@ -60,7 +60,7 @@ TESTS = [
     "Direct Shear Test",
     # "UCS",
     # "Permeability",
-    # "Rock Core Test",
+    "Rock Density & Porosity",
     # "Chemical Analysis"
 ]
 current_user = load_user_profile()

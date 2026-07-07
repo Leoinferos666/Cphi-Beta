@@ -396,7 +396,10 @@ for sample in samples:
         "Sample ID": sample.get("sample_id"),
         "Borehole": bh_name,
         "Depth": sample["depth"],
-        "Type": sample["sample_type"],
+        # "Sample Type": sample.get("sample_type", "Soil"),
+        "Sample Type": sample["sample_type"],
+        "Material": sample.get("material_type", "Soil"),
+        "Rock Number": sample.get("rock_number"),
 
         "SPT-N": sample.get("spt_n_value"),
         "Bulk Density": sample.get("bulk_density"),

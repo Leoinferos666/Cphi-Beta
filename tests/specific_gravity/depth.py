@@ -330,14 +330,14 @@ def render():
 
     with st.form(
         "depth_form"
-    ):
+        ):
         # =====================================
-# ROCK INFORMATION
-# =====================================
+        # ROCK INFORMATION
+        # =====================================
 
                 # =====================================
-# SAMPLE TYPE
-# =====================================
+        # SAMPLE TYPE
+        # =====================================
 
                
                 st.subheader("Trial 1")
@@ -381,8 +381,8 @@ def render():
                         not t1_returned
                     )
                 )
-    if not is_rock:
-                st.divider()
+                if not is_rock:
+                    st.divider()
 
                 st.subheader("Trial 2")
 
@@ -427,8 +427,8 @@ def render():
                 )
 
                 st.divider()
-    if not is_rock:
-                st.subheader("Trial 3")
+                if not is_rock:
+                    st.subheader("Trial 3")
 
                 t3_m1 = st.number_input(
                     "m1  ",
@@ -642,14 +642,14 @@ def render():
                                 )
                 st.divider()
 
-                render_attachments(
+    render_attachments(
 
-                        project_id, 
+            project_id, 
 
-                        borehole_id,
+            borehole_id,
 
-                        "Specific Gravity",
+            "Specific Gravity",
 
-                        depth_record["depth"]
+            depth_record["depth"]
 
-                    )
+        )

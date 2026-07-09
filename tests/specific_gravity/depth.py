@@ -88,7 +88,12 @@ def render():
 
     if "selected_sg_depth" not in st.session_state:
 
-        st.error("No Depth Selected")
+        st.session_state["selected_test_subpage"] = "sg_depth"
+
+        from tests.specific_gravity.depth import render
+
+        render()
+
         st.stop()
 
     depth_id = st.session_state[
@@ -376,7 +381,7 @@ def render():
                         not t1_returned
                     )
                 )
-
+    if not is_rock:
                 st.divider()
 
                 st.subheader("Trial 2")
@@ -422,7 +427,7 @@ def render():
                 )
 
                 st.divider()
-
+    if not is_rock:
                 st.subheader("Trial 3")
 
                 t3_m1 = st.number_input(
@@ -503,11 +508,19 @@ def render():
                                 )
                                 trial_data = [
 
-                                    (t1,1,t1_m1,t1_m2,t1_m3,t1_m4),
-                                    (t2,2,t2_m1,t2_m2,t2_m3,t2_m4),
-                                    (t3,3,t3_m1,t3_m2,t3_m3,t3_m4)
+                                    (t1, 1, t1_m1, t1_m2, t1_m3, t1_m4)
 
                                 ]
+
+                                if not is_rock:
+
+                                    trial_data.extend([
+
+                                        (t2, 2, t2_m1, t2_m2, t2_m3, t2_m4),
+
+                                        (t3, 3, t3_m1, t3_m2, t3_m3, t3_m4)
+
+                                    ])
 
                                 for trial,trial_no,m1,m2,m3,m4 in trial_data:
                                     sg = calculate_specific_gravity(
@@ -629,14 +642,14 @@ def render():
                                 )
                 st.divider()
 
-    render_attachments(
+                render_attachments(
 
-            project_id, 
+                        project_id, 
 
-            borehole_id,
+                        borehole_id,
 
-            "Specific Gravity",
+                        "Specific Gravity",
 
-            depth_record["depth"]
+                        depth_record["depth"]
 
-        )
+                    )

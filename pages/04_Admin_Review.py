@@ -9,6 +9,7 @@ from tests.gsa.report import render_gsa_report
 from tests.liquid_limit.report import render_report
 # from tests.plastic_limit.admin_review import render as render_pl_review   
 from tests.plastic_limit.admin_review import render as render_pl_review
+from tests.rock_density_porosity.admin_review import render as render_rdp_review
 from tests.direct_shear.admin_review import render as render_ds_review
 import pandas as pd
 
@@ -340,223 +341,234 @@ if review["test_name"] == "Specific Gravity":
 
             st.stop()
 
-        submission = (
-            submission_query.data[0]
-        )
+        submissions = submission_query.data
 
-        depths = (
-            supabase
-            .table(
-                "specific_gravity_depths"
-            )
-            .select("*")
-            .eq(
-                "submission_id",
-                submission["id"]
-            )
-            .order(
-                "depth"
-            )
-            .execute()
-        )
+        for submission in submissions:
 
-        for depth_row in depths.data:
-
-            st.write(
-                f"### Depth {depth_row['depth']} m"
-            )
-
-            trials = (
+            depths = (
                 supabase
-                .table(
-                    "specific_gravity_tests"
-                )
+                .table("specific_gravity_depths")
                 .select("*")
-                .eq(
-                    "depth_id",
-                    depth_row["id"]
-                )
-                .order(
-                    "trial_no"
-                )
+                .eq("submission_id", submission["id"])
+                .order("depth")
                 .execute()
             )
 
-            if trials.data:
+            for depth_row in depths.data:
+                # st.write(
+                #             f"### {depth_row.get('sample_id', '-')}"
+                #         )
 
-                for trial in trials.data:
-
-                    with st.container(
-                        border=True
-                    ):
-
-                        st.write(
-                            f"### Trial {trial['trial_no']}"
+                st.caption(
+                            f"Depth: {depth_row['depth']} m | "
+                            f"Sample Type: {depth_row.get('sample_type', '-')} | "
+                            f"Material: {depth_row.get('material_type', 'Soil')}"
                         )
 
-                        c1, c2, c3, c4, c5 = st.columns(5)
+                st.write(
+                f"### Depth {depth_row['depth']} m"
+            )
 
-                        with c1:
-                            st.metric(
-                                "m1",
-                                trial["m1"]
-                            )
-
-                        with c2:
-                            st.metric(
-                                "m2",
-                                trial["m2"]
-                            )
-
-                        with c3:
-                            st.metric(
-                                "m3",
-                                trial["m3"]
-                            )
-
-                        with c4:
-                            st.metric(
-                                "m4",
-                                trial["m4"]
-                            )
-
-                        with c5:
-                            st.metric(
-                                "SG",
-                                round(
-                                    trial["specific_gravity"] or 0,
-                                    3
-                                )
-                            )
-
-                        status = trial.get(
-                        "approval_status",
-                        "Pending"
+                trials = (
+                    supabase
+                    .table(
+                        "specific_gravity_tests"
                     )
+                    .select("*")
+                    .eq(
+                        "depth_id",
+                        depth_row["id"]
+                    )
+                    .order(
+                        "trial_no"
+                    )
+                    .execute()
+                )
 
-                    if status == "Approved":
+                if trials.data:
 
-                        st.success(
-                            "Approved"
-                        )
+                    for trial in trials.data:
 
-                    elif status == "Returned":
+                        with st.container(
+                            border=True
+                        ):
 
-                        st.error(
-                            "Returned"
-                        )
+                            st.write(
+                                f"### Trial {trial['trial_no']}"
+                            )
 
-                    else:
+                            c1, c2, c3, c4, c5 = st.columns(5)
 
-                        st.warning(
+                            with c1:
+                                st.metric(
+                                    "m1",
+                                    trial["m1"]
+                                )
+
+                            with c2:
+                                st.metric(
+                                    "m2",
+                                    trial["m2"]
+                                )
+
+                            with c3:
+                                st.metric(
+                                    "m3",
+                                    trial["m3"]
+                                )
+
+                            with c4:
+                                st.metric(
+                                    "m4",
+                                    trial["m4"]
+                                )
+
+                            with c5:
+                                st.metric(
+                                    "SG",
+                                    round(
+                                        trial["specific_gravity"] or 0,
+                                        3
+                                    )
+                                )
+
+                            status = trial.get(
+                            "approval_status",
                             "Pending"
                         )
 
-                        existing_comment = (
-                            trial.get(
-                                "reviewer_comments"
+                        if status == "Approved":
+
+                            st.success(
+                                "Approved"
                             )
-                            or ""
-                        )
 
-                        trial_comment = st.text_area(
+                        elif status == "Returned":
 
-                            "Reviewer Comment",
+                            st.error(
+                                "Returned"
+                            )
 
-                            value=existing_comment,
+                        else:
 
-                            key=f"comment_{trial['id']}"
+                            st.warning(
+                                "Pending"
+                            )
 
-                        )
-
-                        a1, a2 = st.columns(2)
-
-                        with a1:
-
-                            if st.button(
-
-                                "Approve Trial",
-
-                                key=f"approve_{trial['id']}"
-
-                            ):
-
-                                (
-                                    supabase
-                                    .table(
-                                        "specific_gravity_tests"
-                                    )
-                                    .update({
-
-                                        "approval_status":
-                                        "Approved",
-
-                                        "reviewer_comments":
-                                        trial_comment,
-
-                                        "locked":
-                                        True
-
-                                    })
-                                    .eq(
-                                        "id",
-                                        trial["id"]
-                                    )
-                                    .execute()
+                            existing_comment = (
+                                trial.get(
+                                    "reviewer_comments"
                                 )
+                                or ""
+                            )
 
-                                st.success(
-                                    f"Trial {trial['trial_no']} Approved"
-                                )
+                            trial_comment = st.text_area(
 
-                                st.rerun()
+                                "Reviewer Comment",
 
-                        with a2:
+                                value=existing_comment,
 
-                            if st.button(
+                                key=f"comment_{trial['id']}"
 
-                                "Return Trial",
+                            )
 
-                                key=f"return_{trial['id']}"
+                            a1, a2 = st.columns(2)
 
-                            ):
+                            with a1:
 
-                                (
-                                    supabase
-                                    .table(
-                                        "specific_gravity_tests"
+                                if st.button(
+
+                                    "Approve Trial",
+
+                                    key=f"approve_{trial['id']}"
+
+                                ):
+
+                                    (
+                                        supabase
+                                        .table(
+                                            "specific_gravity_tests"
+                                        )
+                                        .update({
+
+                                            "approval_status":
+                                            "Approved",
+
+                                            "reviewer_comments":
+                                            trial_comment,
+
+                                            "locked":
+                                            True
+
+                                        })
+                                        .eq(
+                                            "id",
+                                            trial["id"]
+                                        )
+                                        .execute()
                                     )
-                                    .update({
 
-                                        "approval_status":
-                                        "Returned",
-
-                                        "reviewer_comments":
-                                        trial_comment,
-
-                                        "status":
-                                        "Draft",
-
-                                        "locked":
-                                        False
-
-                                    })
-                                    .eq(
-                                        "id",
-                                        trial["id"]
+                                    st.success(
+                                        f"Trial {trial['trial_no']} Approved"
                                     )
-                                    .execute()
-                                )
 
-                                st.warning(
-                                    f"Trial {trial['trial_no']} Returned"
-                                )
+                                    st.rerun()
 
-                                st.rerun()
+                            with a2:
+
+                                if st.button(
+
+                                    "Return Trial",
+
+                                    key=f"return_{trial['id']}"
+
+                                ):
+
+                                    (
+                                        supabase
+                                        .table(
+                                            "specific_gravity_tests"
+                                        )
+                                        .update({
+
+                                            "approval_status":
+                                            "Returned",
+
+                                            "reviewer_comments":
+                                            trial_comment,
+
+                                            "status":
+                                            "Draft",
+
+                                            "locked":
+                                            False
+
+                                        })
+                                        .eq(
+                                            "id",
+                                            trial["id"]
+                                        )
+                                        .execute()
+                                    )
+
+                                    st.warning(
+                                        f"Trial {trial['trial_no']} Returned"
+                                    )
+
+                                    st.rerun()
 
     # =====================================
     # GRAIN SIZE ANALYSIS REVIEW
     # =====================================
+    
+if review["test_name"].strip().lower() == "direct shear":
+    render_ds_review(review, project, borehole)
+
+elif review["test_name"] == "Rock Density & Porosity":
+    render_rdp_review(review, project, borehole)
+
+elif review["test_name"] == "Plastic Limit":
+    render_pl_review(review, project, borehole)
 if review["test_name"].strip().lower() == "direct shear":
     render_ds_review(review, project, borehole)
 elif review["test_name"] == "Plastic Limit":

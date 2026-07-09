@@ -473,7 +473,7 @@ else:
                 )
 
                 if selected_borehole:
-
+                    # st.write(test["test_name"])
                     if st.button(
                         "Open Test",
                         key=f"test_{test['id']}",
@@ -498,26 +498,44 @@ else:
                         #     st.info(
                         #         "Test page not built yet"
                         #     )
-                        if test["test_name"] in [
+                        # if test["test_name"] in [
 
-                            "Specific Gravity",
+                        #     "Specific Gravity",
+                        #     # "Rock Density & Porosity",  
 
-                            "Grain Size Analysis",
-                            "Liquid Limit",
-                            "Plastic Limit",
-                            "Direct Shear Test"
+                        #     "Grain Size Analysis",
+                        #     "Liquid Limit",
+                        #     "Plastic Limit",
+                        #     "Direct Shear Test",    
+                        #     "Point Load Strength Index"
 
-                        ]:
+                        # ]:
 
-                            st.switch_page(
-                                "pages/03_Test_Entry.py"
-                            )
+                        #     st.switch_page(
+                        #         "pages/03_Test_Entry.py"
+                        #     )
+                        if test["test_name"] == "Point Load Strength Index":
+
+                            st.session_state["selected_test_subpage"] = "point_load"
+
+                            st.switch_page("pages/03_Test_Entry.py")
+                        elif test["test_name"] == "Unconfined Compressive Test":
+
+                            st.session_state["selected_test_subpage"] = "ucs"
+
+                            st.switch_page("pages/03_Test_Entry.py")
 
                         else:
 
-                            st.info(
-                                "Test page not built yet"
-                            )
+                            st.session_state.pop("selected_test_subpage", None)
+
+                            st.switch_page("pages/03_Test_Entry.py")
+
+                    # else:
+
+                    #     st.info(
+                    #         "Test page not built yet"
+                    #     )
                 else:
 
                     st.caption(

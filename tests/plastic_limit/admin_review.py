@@ -174,6 +174,26 @@ def render(review, project, borehole):
                         .eq("id", trial["id"])
                         .execute()
                     )
+                    (
+                        supabase
+                        .table("pl_submissions")
+                        .update({
+                            "status": "Approved",
+                            "review_status": "Approved"
+                        })
+                        .eq("id", submission["id"])
+                        .execute()
+                    )
+
+                    (
+                        supabase
+                        .table("reviews")
+                        .update({
+                            "status": "Approved"
+                        })
+                        .eq("id", review["id"])
+                        .execute()
+                    )
 
                     st.success(
                         f"Trial {trial['trial_no']} Approved"
@@ -199,6 +219,27 @@ def render(review, project, borehole):
                         .eq("id", trial["id"])
                         .execute()
                     )
+                    (
+                        supabase
+                        .table("pl_submissions")
+                        .update({
+                            "status": "Draft",
+                            "review_status": "Returned"
+                        })
+                        .eq("id", submission["id"])
+                        .execute()
+                    )
+
+                    (
+                        supabase
+                        .table("reviews")
+                        .update({
+                            "status": "Returned"
+                        })
+                        .eq("id", review["id"])
+                        .execute()
+                    )
+
 
                     st.warning(
                         f"Trial {trial['trial_no']} Returned"

@@ -54,6 +54,7 @@ TESTS = [
     "Plastic Limit",
     "Specific Gravity",
     "Grain Size Analysis",
+    "Point Load Strength Index",
     # "Compaction Test",
     # "CBR",
     # "Triaxial Test",
@@ -61,6 +62,7 @@ TESTS = [
     # "UCS",
     # "Permeability",
     "Rock Density & Porosity",
+    "Unconfined Compressive Test",
     # "Chemical Analysis"
 ]
 current_user = load_user_profile()

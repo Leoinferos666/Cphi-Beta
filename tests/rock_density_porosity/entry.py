@@ -4,7 +4,7 @@ from utils.database import get_supabase
 
 supabase = get_supabase()
 
-from tests.Rock_Density_Porosity.calculations import (
+from tests.rock_density_porosity.calculations import (
     calculate_density,
     calculate_porosity,
 )
@@ -130,118 +130,133 @@ def render():
 
 
     # ==========================================
-    # LOAD SAVED TRIALS
+    # LOAD OBSERVATIONS
     # ==========================================
-    saved_readings = (
+    observation = (
         supabase
         .table("rock_density_porosity_observations")
         .select("*")
         .eq("submission_id", submission["id"])
+        .limit(1)
         .execute()
     ).data
-    reading_map = {
-                        (r["normal_stress"], r["dial_reading"]): r
-                        for r in saved_readings
-                    }
+
+    observation = observation[0] if observation else {}
+ 
     read_only = submission["review_status"] in [
     "Pending",
     "Approved"
 ]
 
 
-# ==========================
-# Rock Density & Porosity
-# ==========================
+    # ==========================
+    # Rock Density & Porosity
+    # ==========================
+    # c1, c2 = st.columns(2)
 
-bh_no = st.text_input(
-    "BH No",
-    value=submission.get("bh_no") or "",
-    disabled=read_only,
-)
+    # with c1:
+    #     st.text_input(
+    #         "BH No",
+    #         value=sample[""],
+    #         disabled=True,
+    #     )
 
-depth = st.number_input(
-    "Depth of Sample (m)",
-    value=float(submission.get("depth_of_sample") or sample.get("depth") or 0),
-    disabled=read_only,
-)
+    # with c2:
+    #     st.text_input(
+    #         "Depth (m)",
+    #         value=str(sample["depth"]),
+    #         disabled=True,
+    #     )
 
-rock_number = st.text_input(
-    "Rock Number",
-    value=submission.get("rock_number") or "",
-    disabled=read_only,
-)
+    rock_number = st.text_input(
+        "Rock Number",
+        value=observation.get("rock_number") or "",
+        disabled=read_only,
+    )
 
-st.divider()
+    st.divider()
 
-m1 = st.number_input(
-    "Mass of Container (M1)",
-    value=float(submission.get("m1") or 0),
-    min_value=0.0,
-    step=0.01,
-    disabled=read_only,
-)
+    m1 = st.number_input(
+        "Mass of Container (M1)",
+        value=float(observation.get("m1") or 0),
+        min_value=0.0,
+        step=0.01,
+        disabled=read_only,
+    )
 
-m2 = st.number_input(
-    "Mass of Container immersed in Water (M2)",
-    value=float(submission.get("m2") or 0),
-    min_value=0.0,
-    step=0.01,
-    disabled=read_only,
-)
+    m2 = st.number_input(
+        "Mass of Container immersed in Water (M2)",
+        value=float(observation.get("m2") or 0),
+        min_value=0.0,
+        step=0.01,
+        disabled=read_only,
+    )
 
-m3 = st.number_input(
-    "Mass of Container + Rock Sample immersed in Water (M3)",
-    value=float(submission.get("m3") or 0),
-    min_value=0.0,
-    step=0.01,
-    disabled=read_only,
-)
+    m3 = st.number_input(
+        "Mass of Container + Rock Sample immersed in Water (M3)",
+        value=float(observation.get("m3") or 0),
+        min_value=0.0,
+        step=0.01,
+        disabled=read_only,
+    )
 
-m4 = st.number_input(
-    "Mass of Rock after Minimum 1 Hour Soaking (M4)",
-    value=float(submission.get("m4") or 0),
-    min_value=0.0,
-    step=0.01,
-    disabled=read_only,
-)
+    m4 = st.number_input(
+        "Mass of Rock after Minimum 1 Hour Soaking (M4)",
+        value=float(observation.get("m4") or 0),
+        min_value=0.0,
+        step=0.01,
+        disabled=read_only,
+    )
 
-m5 = st.number_input(
-    "Mass of Rock after Oven Dry (M5)",
-    value=float(submission.get("m5") or 0),
-    min_value=0.0,
-    step=0.01,
-    disabled=read_only,
-)
+    m5 = st.number_input(
+        "Mass of Rock after Oven Dry (M5)",
+        value=float(observation.get("m5") or 0),
+        min_value=0.0,
+        step=0.01,
+        disabled=read_only,
+    )
 
-density = calculate_density(m1, m2, m3, m4, m5)
-porosity = calculate_porosity(m1, m2, m3, m4, m5)
+    density = calculate_density(m1, m2, m3, m4, m5)
+    porosity = calculate_porosity(m1, m2, m3, m4, m5)
 
-st.divider()
+    st.divider()
 
-c1, c2 = st.columns(2)
+    c1, c2 = st.columns(2)
 
-with c1:
-    st.metric("Density", f"{density:.3f}")
+    with c1:
+        st.metric("Density", f"{density:.3f}")
 
-with c2:
-    st.metric("Porosity (%)", f"{porosity:.2f}")
-    
-    if not read_only:
-        c1, c2 = st.columns(2)
+    with c2:
+        st.metric("Porosity (%)", f"{porosity:.2f}")
         
-        with c1:
+        if not read_only:
+            c1, c2 = st.columns(2)
+            
+            with c1:
 
-                if st.button(
-                    "💾 Save Draft",
-                    use_container_width=True,
-                    key="ds_save_draft"
-                ):
-                    (
-                        supabase
+                    if st.button(
+                        "💾 Save Draft",
+                        use_container_width=True,
+                        key="rdp_save_draft"
+                    ):
+                        (
+                            supabase
                         .table("rock_density_porosity_submissions")
-                        .update({
-                            "bh_no": bh_no,
-                            "depth_of_sample": depth,
+                            .update({
+                                "status": "Draft",
+                                "review_status": "Draft"
+                            })
+                            .eq("id", submission["id"])
+                            .execute()
+                        )
+                        # locked_state = True
+
+                        
+                        observation_payload = {
+                            "submission_id": submission["id"],
+
+                            # "bh_no": bh_no,
+                            # "depth_of_sample": depth,
                             "rock_number": rock_number,
 
                             "m1": m1,
@@ -253,124 +268,104 @@ with c2:
                             "density": density,
                             "porosity": porosity,
 
-                            "status": "Draft",
-                            "review_status": "Draft"
-                        })
-                        .eq("id", submission["id"])
-                        .execute()
-                    )
-                    locked_state = True
-
-                    
-                    (
-                        supabase
-                        .table("rock_density_porosity_observations")
-                        .upsert(
-                            trial_payload,
-                            on_conflict="submission_id,normal_stress,dial_reading"
-                        )
-                        .execute()
-                    )
-                    st.success("Draft Saved")
-                    st.rerun()      
-
-        with c2:
-
-                if st.button(
-                    "✅ Final Submit",
-                    use_container_width=True,
-                    key="ds_final_submit"
-                ):
-                    (
-                        supabase
-                        .table("rock_density_porosity_observations")
-                        .upsert(
-                            trial_payload,
-                            on_conflict="submission_id,normal_stress,dial_reading"
-                        )
-                        .execute()
-                    )
-                    peak_points = []
-
-                    for stress in NORMAL_STRESSES:
-
-                        rows = [
-                            r
-                            for r in results
-                            if r["normal_stress"] == stress
-                        ]
-
-                        peak = max(
-                            rows,
-                            key=lambda x: x["shear_stress"]
-                        )
-
-                        peak_points.append({
-                            "normal_stress": stress,
-                            "peak_shear_stress": peak["shear_stress"]
-                        })
-
-                    ds = calculate_direct_shear(peak_points)
-
-                    (
-                        supabase
-                        .table("rock_density_porosity_submissions")
-                        .update({
-                            "water_content": water_content,
-                            "final_wet_mass": final_wet_mass,
-                            "cohesion": ds["cohesion"],
-                            "phi": ds["phi"],
-                            "status": "Submitted",
-                            "review_status": "Pending"
-                        })
-                        .eq("id", submission["id"])
-                        .execute()
-                    )
-                    # (
-                    #     supabase
-                    #     .table("rock_density_porosity_observations")
-                    #     .update({
-                    #         "locked": True
-                    #     })
-                    #     .eq("submission_id", submission["id"])
-                    #     .execute()
-                    # )
-                    existing_review = (
-                        supabase
-                        .table("reviews")
-                        .select("*")
-                        .eq("project_id", submission["project_id"])
-                        .eq("borehole_id", submission["borehole_id"])
-                        .eq("sample_id", submission["sample_id"])
-                        .eq("test_name", "Direct Shear")
-                        .execute()
-                    ).data
-                    
-                    if existing_review:
+                            "approval_status": "Draft",
+                            "locked": False
+                        }
 
                         (
                             supabase
-                            .table("reviews")
+                            .table("rock_density_porosity_observations")
+                            .upsert(
+                                observation_payload,
+                                on_conflict="submission_id"
+                            )
+                            .execute()
+                        )
+                        st.success("Draft Saved")
+                        st.rerun()      
+
+            with c2:
+
+                    if st.button(
+                        "✅ Final Submit",
+                        use_container_width=True,
+                        key="rdp_final_submit"
+                    ):
+                        observation_payload = {
+                            "submission_id": submission["id"],
+
+                            # "bh_no": bh_no,
+                            # "depth_of_sample": depth,
+                            "rock_number": rock_number,
+
+                            "m1": m1,
+                            "m2": m2,
+                            "m3": m3,
+                            "m4": m4,
+                            "m5": m5,
+
+                            "density": density,
+                            "porosity": porosity,
+
+                            "approval_status": "Pending",
+                            "locked": True
+                        }
+
+                        (
+                            supabase
+                            .table("rock_density_porosity_observations")
+                            .upsert(
+                            observation_payload,
+                            on_conflict="submission_id"
+                            )
+                            .execute()
+                        )
+
+                        (
+                            supabase
+                            .table("rock_density_porosity_submissions")
                             .update({
-                                "status": "Pending"
+                                "status": "Submitted",
+                                "review_status": "Pending"
                             })
-                            .eq("id", existing_review[0]["id"])
+                            .eq("id", submission["id"])
                             .execute()
                         )
 
-                    else:
-
-                        (
+                        existing_review = (
                             supabase
                             .table("reviews")
-                            .insert({
-                                "project_id": submission["project_id"],
-                                "borehole_id": submission["borehole_id"],
-                                "sample_id": submission["sample_id"],
-                                "test_name": "Direct Shear",
-                                "status": "Pending"
-                            })
+                            .select("*")
+                            .eq("project_id", submission["project_id"])
+                            .eq("borehole_id", submission["borehole_id"])
+                            .eq("sample_id", submission["sample_id"])
+                            .eq("test_name", "Rock Density & Porosity")
                             .execute()
-                        )
-                    st.success("Direct Shear Test Submitted Successfully")
-                    st.rerun()
+                        ).data
+
+                        if existing_review:
+                            (
+                                supabase
+                                .table("reviews")
+                                .update({
+                                    "status": "Pending"
+                                })
+                                .eq("id", existing_review[0]["id"])
+                                .execute()
+                            )
+                        else:
+                            (
+                                supabase
+                                .table("reviews")
+                                .insert({
+                                    "project_id": submission["project_id"],
+                                    "borehole_id": submission["borehole_id"],
+                                    "sample_id": submission["sample_id"],
+                                    "test_name": "Rock Density & Porosity",
+                                    "status": "Pending"
+                                })
+                                .execute()
+                            )
+
+                        st.success("Rock Density & Porosity submitted successfully.")
+                        st.rerun()

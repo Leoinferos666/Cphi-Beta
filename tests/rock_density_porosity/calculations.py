@@ -1,75 +1,40 @@
-import math
-import numpy as np
+def calculate_density(m1, m2, m3, m4, m5):
+    """
+    Density = (M5 - M1) / ((M4 - M1) - (M3 - M2))
+    """
+
+    try:
+        denominator = (m4 - m1) - (m3 - m2)
+
+        if denominator == 0:
+            return 0.0
+
+        return round((m5 - m1) / denominator, 3)
+
+    except Exception:
+        return 0.0
 
 
-# ---------------------------------------------------
-# Peak Shear Stress
-# ---------------------------------------------------
+def calculate_porosity(m1, m2, m3, m4, m5):
+    """
+    Porosity (%) =
+    ((M4 - M1) - (M5 - M1))
+    /
+    ((M4 - M1) - (M3 - M2))
+    × 100
+    """
 
-def calculate_peak_shear_stress(peak_force, area):
+    try:
+        denominator = (m4 - m1) - (m3 - m2)
 
-    if area <= 0:
-        return None
+        if denominator == 0:
+            return 0.0
 
-    return peak_force / area
+        numerator = (m4 - m1) - (m5 - m1)
 
+        return round((numerator / denominator) * 100, 2)
 
-# ---------------------------------------------------
-# Direct Shear
-# ---------------------------------------------------
-
-def calculate_direct_shear(results):
-
-    points = []
-
-    for row in results:
-
-        if (
-            row["normal_stress"] > 0
-            and row["peak_shear_stress"] is not None
-        ):
-
-            points.append(
-                (
-                    row["normal_stress"],
-                    row["peak_shear_stress"]
-                )
-            )
-
-    if len(points) < 2:
-
-        return {
-            "cohesion": None,
-            "phi": None,
-            "slope": None,
-            "intercept": None
-        }
-
-    sigma = np.array([p[0] for p in points])
-    tau = np.array([p[1] for p in points])
-
-    slope, intercept = np.polyfit(
-        sigma,
-        tau,
-        1
-    )
-
-    phi = math.degrees(
-        math.atan(slope)
-    )
-
-    return {
-
-        "cohesion": intercept,
-
-        "phi": phi,
-
-        "slope": slope,
-
-        "intercept": intercept,
-
-        "sigma": sigma,
-
-        "tau": tau
-
-    }
+    except Exception:
+        return 0.0
+    
+        

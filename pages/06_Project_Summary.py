@@ -184,9 +184,11 @@ ds_lookup = {
     ): row
     for row in ds_submissions
 }
+
 # =====================================
 # LOAD SG TESTS
 # =====================================
+
 
 sg_tests = (
 
@@ -227,6 +229,45 @@ borehole_lookup = {
 
 }
 # =====================================
+# LOAD SG DEPTHS
+# =====================================
+sg_submissions = (
+        supabase
+        .table("specific_gravity_submissions")
+        .select("*")
+        .eq("project_id", project_id)
+        .execute()
+    ).data
+
+submission_lookup = {
+        row["id"]: row
+        for row in sg_submissions
+    }
+
+sg_depths = (
+    supabase
+    .table("specific_gravity_depths")
+    .select("*")
+    .execute()
+).data
+
+sg_depth_lookup = {}
+
+for row in sg_depths:
+
+    submission = submission_lookup.get(row["submission_id"])
+
+    if submission is None:
+        continue
+
+    sg_depth_lookup[
+        (
+            submission["borehole_id"],
+            row["sample_id"]
+        )
+    ] = row
+  
+# =====================================
 # BUILD SUMMARY
 # =====================================
 
@@ -255,6 +296,44 @@ for sample in samples:
         else bh["bh_no"]
 
     )
+          
+    # =====================================
+    # LOAD ROCK DENSITY & POROSITY
+    # =====================================
+
+    rdp_submissions = (
+        supabase
+        .table("rock_density_porosity_submissions")
+        .select("*")
+        .eq("project_id", project_id)
+        .execute()
+    ).data
+    rdp_observations = (
+        supabase
+        .table("rock_density_porosity_observations")
+        .select("*")
+        .execute()
+    ).data
+    rdp_lookup = {}
+
+    for obs in rdp_observations:
+
+        submission = next(
+            (
+                s for s in rdp_submissions
+                if s["id"] == obs["submission_id"]
+            ),
+            None
+        )
+
+        if submission:
+
+            rdp_lookup[
+                (
+                    submission["borehole_id"],
+                    submission["sample_id"]
+                )
+            ] = obs
 
     # =========================
     # SPECIFIC GRAVITY
@@ -355,7 +434,12 @@ for sample in samples:
             sample["sample_id"]
         )
     )
-
+    rdp = rdp_lookup.get(
+        (
+            sample["borehole_id"],
+            sample["sample_id"]
+        )
+    )
     pi = None
 
     if (
@@ -368,8 +452,7 @@ for sample in samples:
             ll["liquid_limit"] - pl["plastic_limit"],
             2
         )
-        
-
+  
     # =========================
     # STATUS
     # =========================
@@ -390,7 +473,13 @@ for sample in samples:
 
     else:
         status = "Pending"
-
+    sg_depth = sg_depth_lookup.get(
+    (
+        sample["borehole_id"],
+        sample["sample_id"]
+    ),
+    {}
+)
     summary_rows.append({
         "Sample_DB_ID": sample["id"],
         "Sample ID": sample.get("sample_id"),
@@ -398,8 +487,15 @@ for sample in samples:
         "Depth": sample["depth"],
         # "Sample Type": sample.get("sample_type", "Soil"),
         "Sample Type": sample["sample_type"],
-        "Material": sample.get("material_type", "Soil"),
-        "Rock Number": sample.get("rock_number"),
+
+            "Material": sg_depth.get(
+                "material_type",
+                "Soil"
+            ),
+
+            "Rock Number": sg_depth.get(
+                "rock_number"
+            ),
 
         "SPT-N": sample.get("spt_n_value"),
         "Bulk Density": sample.get("bulk_density"),
@@ -432,6 +528,15 @@ for sample in samples:
             round(ds["phi"], 2)
             if ds and ds.get("phi") is not None
             else "-",
+            "Rock Density":
+        round(rdp["density"], 3)
+        if rdp and rdp.get("density") is not None
+        else "-",
+
+    "Rock Porosity (%)":
+        round(rdp["porosity"], 2)
+        if rdp and rdp.get("porosity") is not None
+        else "-",
 
         # "Status": status,
         # "Remarks": sample.get("remarks")
@@ -480,8 +585,9 @@ if summary_rows:
             "Direct Shear c",
             "Direct Shear φ",
             "Status",
-            "Remarks"
-
+            "Remarks",
+            "Rock Density",
+            "Rock Porosity (%)",
         ]
 
     )

@@ -30,7 +30,7 @@ def render():
     ).data
 
     st.title(
-        "Direct Shear Test"
+        "Rock Density & Porosity"
     )
 
     for sample in samples:
@@ -65,7 +65,7 @@ def render():
 
                 existing = (
                     supabase
-                    .table("ds_submissions")
+                    .table("rock_density_porosity_submissions")
                     .select("*")
                     .eq(
                         "project_id",
@@ -93,7 +93,7 @@ def render():
 
                     submission = (
                         supabase
-                        .table("ds_submissions")
+                        .table("rock_density_porosity_submissions")
                         .insert({
                             "project_id": st.session_state["selected_project"],
                             "borehole_id": borehole_id,
@@ -109,9 +109,9 @@ def render():
                 # st.write("Going to entry page")
                 st.session_state["selected_submission"] = submission["id"]
                 st.session_state["selected_sample"] = sample
-                st.session_state["selected_test_subpage"] = "ds"
+                st.session_state["selected_test_subpage"] = "rdp"
                
 
 
                 # st.stop()
-                st.switch_page("pages/03_Test_Entry.py")
+                st.switch_page("pages/03_Test_Entry.py")    

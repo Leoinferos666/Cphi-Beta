@@ -37,7 +37,7 @@ def load_sg_data(
         .eq("borehole_id", borehole_id)
         .execute()
     ).data
-
+    
     return (
         project,
         borehole,
@@ -192,36 +192,21 @@ def render():
 
             selected_samples = []
             
-            existing_depths = (
-
+            existing_samples = (
                 supabase
-                .table(
-                    "specific_gravity_depths"
-                )
-                .select(
-                    "depth"
-                )
-                .eq(
-                    "submission_id",
-                    submission_id
-                )
+                .table("specific_gravity_depths")
+                .select("sample_id")
                 .execute()
-
             ).data
 
-            existing_depths = {
+            existing_samples = {
+                row["sample_id"]
+                for row in existing_samples
+            }
 
-                float(
-                    d["depth"]
-                )
-
-                for d in existing_depths
-
-}
             for sample in borehole_samples.data:
 
-                if float(sample["depth"]) in existing_depths:
-
+                if sample["sample_id"] in existing_samples:
                     continue
 
                 checked = st.checkbox(
@@ -345,6 +330,38 @@ def render():
                 0
             ) + 1
         )
+    for depth in depths.data:
+
+        trials = (
+            supabase
+            .table("specific_gravity_tests")
+            .select("specific_gravity")
+            .eq("depth_id", depth["id"])
+            .execute()
+        ).data
+
+        values = [
+            t["specific_gravity"]
+            for t in trials
+            if t["specific_gravity"] is not None
+        ]
+
+        if values:
+
+            avg = round(
+                sum(values) / len(values),
+                3
+            )
+
+            (
+                supabase
+                .table("specific_gravity_depths")
+                .update({
+                    "specific_gravity": avg
+                })
+                .eq("id", depth["id"])
+                .execute()
+            )
     st.subheader(
         "Specific Gravity Samples"
     )
@@ -371,11 +388,11 @@ def render():
                 )
 
                 st.caption(
-                    f"Sample Type : {depth_row.get('sample_type', 'Soil')}"
+                    f"Sample Type : {depth_row.get('material_type', 'Soil')}"
                 )
 
                 if (
-                    depth_row.get("sample_type") == "Rock"
+                    depth_row.get("material_type") == "Rock"
                     and depth_row.get("rock_number")
                 ):
 
@@ -391,17 +408,16 @@ def render():
 
                 )
 
-                if trial_count == 3:
+                required_trials = (
+                    1
+                    if depth_row.get("material_type") == "Rock"
+                    else 3
+                )
 
-                    st.success(
-                        "Saved"
-                    )
-
+                if trial_count >= required_trials:
+                    st.success("Saved")
                 else:
-
-                    st.warning(
-                        "Pending"
-                    )
+                    st.warning("Pending")
 
             with c2:
 
@@ -600,3 +616,67 @@ def render():
             
             st.cache_data.clear()
             st.rerun()
+            
+        submitted_submissions = (
+        supabase
+        .table("specific_gravity_submissions")
+        .select("*")
+        .eq("project_id", project_id)
+        .eq("borehole_id", borehole_id)
+        .eq("status", "Submitted")
+        .execute()
+    ).data
+
+    # st.write("Submitted submissions:", submitted_submissions)
+    submitted = (
+        supabase
+        .table("specific_gravity_depths")
+        .select(
+            "*, specific_gravity_submissions!inner(status)"
+        )
+        .eq(
+            "specific_gravity_submissions.status",
+            "Submitted"
+        )
+        .eq(
+            "submission_id",
+            submission_id
+        )
+        .order("depth")
+        .execute()
+    ).data
+    # st.write(submitted)
+    if submitted:
+
+        st.divider()
+        st.subheader("Submitted Samples")
+
+        for depth_row in submitted:
+
+            with st.container(border=True):
+
+                c1, c2 = st.columns([5, 1])
+
+                with c1:
+
+                    st.write(f"### {depth_row['sample_id']}")
+
+                    st.caption(f"Depth : {depth_row['depth']} m")
+
+                    st.caption(
+                        f"Material : {depth_row.get('material_type', 'Soil')}"
+                    )
+
+                with c2:
+
+                    if st.button(
+                        "View",
+                        key=f"submitted_{depth_row['id']}"
+                    ):
+
+                        st.session_state["selected_sg_depth"] = depth_row["id"]
+                        st.session_state["selected_test_subpage"] = "sg_depth"
+
+                        st.switch_page(
+                            "pages/03_Test_Entry.py"
+                        )

@@ -9,7 +9,7 @@ from tests.plastic_limit.calculations import (
     calculate_plastic_limit
 )
 
-DEFAULT_TRIALS = 3
+DEFAULT_TRIALS = 1
 
 
 def render():
@@ -473,11 +473,14 @@ def render():
                 .update({
                     "status": "Draft",
                     "review_status": "Draft",
-                "plastic_limit": pl["plastic_limit"]
+                    "plastic_limit": pl["plastic_limit"]
+                 
                 })
                 .eq("id", submission["id"])
                 .execute()
             )
+            st.write(pl)
+            st.write(submission)
             for i in range(20):
 
                 # st.session_state.pop(f"blows_{i}", None)

@@ -7,13 +7,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 def render(review, project, borehole):
     
-    if review["test_name"] == "Direct Shear":
-        st.subheader("Direct Shear")
+    if review["test_name"] == "Rock Density & Porosity":
+        st.subheader("Rock Density & Porosity")
         # st.write("Review:", review)
 
         submissions = (
             supabase
-            .table("ds_submissions")
+            .table("rock_density_porosity_submissions")
             .select("*")
             .eq("project_id", review["project_id"])
             .eq("borehole_id", review["borehole_id"])
@@ -76,170 +76,56 @@ def render(review, project, borehole):
                 # st.write(
                 #     f"Flow Index : {submission['flow_index']:.2f}"
                 # )
-                st.subheader("Calculated Results")
+            # st.write("Submission ID from submission table:", submission["id"])
+            # st.write("Review:", review)
+            # st.subheader("Observation")
+            # st.write("Submission ID:", submission["id"])
+            observation = (
+                supabase
+                .table("rock_density_porosity_observations")
+                .select("*")
+                .eq("submission_id", submission["id"])
+                .limit(1)
+                .execute()
+            ).data
+            # st.write(observation)
 
-                
-                c1, c2 = st.columns(2)
+            if not observation:
+                st.warning("No observation found.")
+                st.stop()
 
-                with c1:
-                    st.metric(
-                        "Cohesion (kg/cm²)",
-                        f"{(submission.get('cohesion') or 0):.3f}"
-                    )
+            observation = observation[0]
+            st.subheader("Technician Readings")
 
-                with c2:
-                    st.metric(
-                        "Friction Angle (°)",
-                        f"{(submission.get('phi') or 0):.2f}"
-                    )
+            c1, c2, c3 = st.columns(3)
 
-                st.write(f"**Water Content:** {(submission.get('water_content') or 0):.2f} %")
-                st.write(f"**Final Wet Mass:** {(submission.get('final_wet_mass') or 0):.2f} g")
+            with c1:
+                st.metric("Rock Number", observation.get("rock_number", "-"))
+                st.metric("M1", observation.get("m1", 0))
+                st.metric("M4", observation.get("m4", 0))
 
-                st.divider()
-                readings = (
-                    supabase
-                    .table("ds_trials")
-                    .select("*")
-                    .eq("submission_id", submission["id"])
-                    .order("normal_stress")
-                    .order("dial_reading")
-                    .execute()
-                ).data      
-            NORMAL_STRESSES = [0.5, 1.0, 1.5]
+            with c2:
+                st.metric("M2", observation.get("m2", 0))
+                st.metric("M5", observation.get("m5", 0))
 
-            for stress in NORMAL_STRESSES:
+            with c3:
+                st.metric("M3", observation.get("m3", 0))
 
-                st.subheader(f"Normal Stress = {stress} kg/cm²")
+            st.divider()
 
-                rows = [
-                    r for r in readings
-                    if r["normal_stress"] == stress
-                ]
+            c1, c2 = st.columns(2)
 
-                if not rows:
-                    st.info("No readings found.")
-                    continue
-
-                table = []
-
-                for row in rows:
-
-                    table.append({
-
-                        "Dial": row["dial_reading"],
-
-                        "ΔL (mm)": round(row["dial_reading"] / 100, 2),
-
-                        "Area": round(
-                            36 * (1 - (row["dial_reading"] / 100) / 60),
-                            2
-                        ),
-
-                        "Ring": row["ring_reading"],
-
-                        "Force": round(row["shear_force"], 3),
-
-                        "Stress": round(row["shear_stress"], 3)
-
-                    })
-
-                st.dataframe(
-                    table,
-                    use_container_width=True,
-                    hide_index=True
+            with c1:
+                st.metric(
+                    "Density",
+                    f"{(observation.get('density') or 0):.3f}"
                 )
 
-                st.divider()
-        st.subheader("Peak Shear Stress Summary")
-
-        peak_rows = []
-
-        for stress in NORMAL_STRESSES:
-
-            rows = [
-                r for r in readings
-                if r["normal_stress"] == stress
-            ]
-
-            if rows:
-
-                peak = max(
-                    rows,
-                    key=lambda x: x["shear_stress"]
+            with c2:
+                st.metric(
+                    "Porosity (%)",
+                    f"{(observation.get('porosity') or 0):.2f}"
                 )
-
-                peak_rows.append({
-
-                    "Normal Stress": stress,
-
-                    "Peak Shear Stress": round(
-                        peak["shear_stress"],
-                        3
-                    )
-
-                })
-
-        st.dataframe(
-            peak_rows,
-            use_container_width=True,
-            hide_index=True
-        )
-        st.subheader("Failure Envelope")
-        sigma = np.array([
-        p["Normal Stress"]
-        for p in peak_rows
-    ])
-
-    tau = np.array([
-        p["Peak Shear Stress"]
-        for p in peak_rows
-    ])
-
-    slope, intercept = np.polyfit(
-        sigma,
-        tau,
-        1
-    )
-    fig, ax = plt.subplots(figsize=(6,5))
-
-    ax.scatter(
-        sigma,
-        tau,
-        s=70
-    )
-
-    x = np.linspace(
-        0,
-        max(sigma) * 1.2,
-        100
-    )
-
-    y = slope * x + intercept
-
-    ax.plot(
-        x,
-        y,
-        linewidth=2
-    )
-
-    ax.set_xlabel("Normal Stress (kg/cm²)")
-    ax.set_ylabel("Shear Stress (kg/cm²)")
-    ax.set_title("Failure Envelope")
-
-    ax.grid(True)
-
-    st.pyplot(fig)
-    st.metric(
-        "Cohesion (c)",
-        f"{intercept:.3f} kg/cm²"
-    )
-
-    st.metric(
-        "Friction Angle (φ)",
-        f"{np.degrees(np.arctan(slope)):.2f}°"
-    )
-    st.divider()
 
     review_comment = st.text_area(
         "Reviewer Comment",
@@ -267,17 +153,17 @@ def render(review, project, borehole):
             )
 
             (
-                supabase
-                .table("ds_submissions")
-                .update({
-                    "status": "Submitted",
-                    "review_status": "Approved"
-                })
-                .eq("id", submission["id"])
-                .execute()
-            )
-
-            st.success("Direct Shear Approved")
+                    supabase
+                    .table("rock_density_porosity_observations")
+                    .update({
+                        "approval_status": "Approved",
+                        "reviewer_comments": review_comment,
+                        "locked": True
+                    })
+                    .eq("submission_id", submission["id"])
+                    .execute()
+                )
+            st.success("Rock Density Porosity Approved")
 
             st.session_state.pop("review_id", None)
 
@@ -302,7 +188,7 @@ def render(review, project, borehole):
 
                 (
                     supabase
-                    .table("ds_submissions")
+                    .table("rock_density_porosity_submissions")
                     .update({
                         "status": "Draft",
                         "review_status": "Returned"
@@ -313,7 +199,7 @@ def render(review, project, borehole):
 
                 (
                     supabase
-                    .table("ds_trials")
+                    .table("rock_density_porosity_observations")
                     .update({
                         "locked": False
                     })

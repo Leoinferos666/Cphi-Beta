@@ -215,36 +215,122 @@ def render(
             st.rerun()
 
     with c2:
-
         if st.button(
-            "Regenerate",
-            key=f"regen_{borehole['id']}"
+        "Regenerate",
+        key=f"regen_{borehole['id']}"
+    ):
+            st.session_state[
+                f"confirm_regen_{borehole['id']}"
+            ] = True
+        if st.session_state.get(
+            f"confirm_regen_{borehole['id']}",
+            False
         ):
 
-            delete_sample_log(
-                borehole["id"]
-            )
+                st.warning(
+                    "⚠️ Regenerating the sample log will delete the existing sample log and create a new one."
+                )
 
-            generate_sample_log(
+                c1, c2 = st.columns(2)
 
-                borehole["id"],
+                with c1:
 
-                borehole["depth"],
+                    if st.button(
+                        "✅ Regenerate",
+                        key=f"confirm_regen_btn_{borehole['id']}"
+                    ):
+                            # =====================================
+                            # CHECK FOR EXISTING TEST DATA
+                            # =====================================
 
-                borehole[
-                    "first_sample_depth"
-                ],
+                            tables = [
+                                "ll_submissions",
+                                "pl_submissions",
+                                "specific_gravity_submissions",
+                                "ds_submissions",
+                                "gsa_submissions"
+                            ]
 
-                borehole[
-                    "first_sample_type"
-                ]
+                            has_data = False
 
-            )
+                            for table in tables:
 
-            st.success(
-                "Log Regenerated"
-            )
+                                result = (
+                                    supabase
+                                    .table(table)
+                                    .select("id")
+                                    .eq(
+                                        "borehole_id",
+                                        borehole["id"]
+                                    )
+                                    .limit(1)
+                                    .execute()
+                                )
 
-            st.cache_data.clear()
-            st.rerun()
+                                if result.data:
 
+                                    has_data = True
+                                    break
+
+
+                            if has_data:
+
+                                st.error(
+                                    "Cannot regenerate sample log because laboratory test data already exists for this borehole."
+                                )
+
+                                st.session_state.pop(
+                                    f"confirm_regen_{borehole['id']}",
+                                    None
+                                )
+
+                                st.stop()
+
+
+                            delete_sample_log(
+                                borehole["id"]
+                            )
+
+                        
+
+                            generate_sample_log(
+
+                            borehole["id"],
+
+                            borehole["depth"],
+
+                            borehole[
+                                "first_sample_depth"
+                            ],
+
+                            borehole[
+                                "first_sample_type"
+                            ]
+
+                        )
+
+                            st.session_state.pop(
+                                f"confirm_regen_{borehole['id']}",
+                                None
+                            )
+
+                            st.success(
+                                "Sample log regenerated."
+                            )
+
+                            st.cache_data.clear()
+                            st.rerun()
+
+                    with c2:
+
+                        if st.button(
+                            "❌ Cancel",
+                            key=f"cancel_regen_{borehole['id']}"
+                        ):
+
+                            st.session_state.pop(
+                                f"confirm_regen_{borehole['id']}",
+                                None
+                            )
+
+                            st.rerun()          

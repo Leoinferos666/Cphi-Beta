@@ -190,12 +190,11 @@ def render():
             "sample_selection_form"
         ):
 
-            selected_samples = []
-            
             existing_samples = (
                 supabase
                 .table("specific_gravity_depths")
                 .select("sample_id")
+                .eq("submission_id", submission_id)
                 .execute()
             ).data
 
@@ -248,7 +247,7 @@ def render():
 
                     "sample_type":
                     sample["sample_type"],
-                    
+                    "material_type": sample.get("material_type"),
                      "rock_number":
                     sample.get("rock_number")   
 

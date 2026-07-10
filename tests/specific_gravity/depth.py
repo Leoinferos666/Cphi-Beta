@@ -396,115 +396,115 @@ def render():
                 if not is_rock:
                     st.divider()
 
-                st.subheader("Trial 2")
+                    st.subheader("Trial 2")
 
-                t2_m1 = st.number_input(
-                    "m1 ",
-                    value=float(t2.get("m1", 0)),
-                    disabled=(
-                        submission["status"] == "Submitted"
-                        and
-                        not t2_returned
+                    t2_m1 = st.number_input(
+                        "m1 ",
+                        value=float(t2.get("m1", 0)),
+                        disabled=(
+                            submission["status"] == "Submitted"
+                            and
+                            not t2_returned
+                        )
                     )
-                )
 
-                t2_m2 = st.number_input(
-                    "m2 ",
-                    value=float(t2.get("m2", 0)),
-                    disabled=(
-                        submission["status"] == "Submitted"
-                        and
-                        not t2_returned
+                    t2_m2 = st.number_input(
+                        "m2 ",
+                        value=float(t2.get("m2", 0)),
+                        disabled=(
+                            submission["status"] == "Submitted"
+                            and
+                            not t2_returned
+                        )
                     )
-                )
 
-                t2_m3 = st.number_input(
-                    "m3 ",
-                    value=float(t2.get("m3", 0)),
-                    disabled=(
-                        submission["status"] == "Submitted"
-                        and
-                        not t2_returned
+                    t2_m3 = st.number_input(
+                        "m3 ",
+                        value=float(t2.get("m3", 0)),
+                        disabled=(
+                            submission["status"] == "Submitted"
+                            and
+                            not t2_returned
+                        )
                     )
-                )
 
-                t2_m4 = st.number_input(
-                    "m4 ",
-                    value=float(t2.get("m4", 0)),
-                    disabled=(
-                        submission["status"] == "Submitted"
-                        and
-                        not t2_returned
+                    t2_m4 = st.number_input(
+                        "m4 ",
+                        value=float(t2.get("m4", 0)),
+                        disabled=(
+                            submission["status"] == "Submitted"
+                            and
+                            not t2_returned
+                        )
                     )
-                )
-                t2_sg = calculate_specific_gravity(
-                    t2_m1,
-                    t2_m2,
-                    t2_m3,
-                    t2_m4
-                )
+                    t2_sg = calculate_specific_gravity(
+                        t2_m1,
+                        t2_m2,
+                        t2_m3,
+                        t2_m4
+                    )
 
-                if t2_sg > 0:
-                    st.metric(
-                        "Specific Gravity",
-                        t2_sg
-                    )
+                    if t2_sg > 0:
+                        st.metric(
+                            "Specific Gravity",
+                            t2_sg
+                        )
 
                 st.divider()
                 if not is_rock:
                     st.subheader("Trial 3")
 
-                t3_m1 = st.number_input(
-                    "m1  ",
-                    value=float(t3.get("m1", 0)),
-                    disabled=(
-                        submission["status"] == "Submitted"
-                        and
-                        not t3_returned
+                    t3_m1 = st.number_input(
+                        "m1  ",
+                        value=float(t3.get("m1", 0)),
+                        disabled=(
+                            submission["status"] == "Submitted"
+                            and
+                            not t3_returned
+                        )
                     )
-                )
 
-                t3_m2 = st.number_input(
-                    "m2  ",
-                    value=float(t3.get("m2", 0)),
-                    disabled=(
-                        submission["status"] == "Submitted"
-                        and
-                        not t3_returned
+                    t3_m2 = st.number_input(
+                        "m2  ",
+                        value=float(t3.get("m2", 0)),
+                        disabled=(
+                            submission["status"] == "Submitted"
+                            and
+                            not t3_returned
+                        )
                     )
-                )
 
-                t3_m3 = st.number_input(
-                    "m3  ",
-                    value=float(t3.get("m3", 0)),
-                    disabled=(
-                        submission["status"] == "Submitted"
-                        and
-                        not t3_returned
+                    t3_m3 = st.number_input(
+                        "m3  ",
+                        value=float(t3.get("m3", 0)),
+                        disabled=(
+                            submission["status"] == "Submitted"
+                            and
+                            not t3_returned
+                        )
                     )
-                )
 
-                t3_m4 = st.number_input(
-                    "m4  ",
-                    value=float(t3.get("m4", 0)),
-                    disabled=(
-                        submission["status"] == "Submitted"
-                        and
-                        not t3_returned
+                    t3_m4 = st.number_input(
+                        "m4  ",
+                        value=float(t3.get("m4", 0)),
+                        disabled=(
+                            submission["status"] == "Submitted"
+                            and
+                            not t3_returned
+                        )
                     )
-                )
-                t3_sg = calculate_specific_gravity(
-                    t3_m1,
-                    t3_m2,
-                    t3_m3,
-                    t3_m4
-                )
+                    t3_sg = calculate_specific_gravity(
+                        t3_m1,
+                        t3_m2,
+                        t3_m3,
+                        t3_m4
+                    )
 
-                if t3_sg > 0:
-                    st.metric(
-                        "Specific Gravity",
-                        t3_sg
-                    )
+                    if t3_sg > 0:
+                        st.metric(
+                            "Specific Gravity",
+                            t3_sg
+                        )
 
                 save = st.form_submit_button(
                     "Save"

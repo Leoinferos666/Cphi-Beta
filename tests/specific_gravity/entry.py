@@ -1,10 +1,12 @@
+from tests.specific_gravity.calculations import (
+    calculate_specific_gravity
+)
 import streamlit as st
 from utils.database import get_supabase
 
 supabase = get_supabase()
-from tests.specific_gravity.calculations import (
-    calculate_specific_gravity
-)
+
+
 @st.cache_data(ttl=30)
 def load_sg_data(
     project_id,
@@ -37,12 +39,13 @@ def load_sg_data(
         .eq("borehole_id", borehole_id)
         .execute()
     ).data
-    
+
     return (
         project,
         borehole,
         submission
     )
+
 
 def render():
 
@@ -73,13 +76,13 @@ def render():
     # =====================================
 
     (
-    project,
-    borehole,
-    submission
-) = load_sg_data(
-    project_id,
-    borehole_id
-)
+        project,
+        borehole,
+        submission
+    ) = load_sg_data(
+        project_id,
+        borehole_id
+    )
 
     if submission:
 
@@ -224,11 +227,10 @@ def render():
                     )
 
         add_samples = (
-        st.form_submit_button(
-            "Create SG Test Entries"
+            st.form_submit_button(
+                "Create SG Test Entries"
+            )
         )
-    )
-        
 
         if add_samples:
 
@@ -250,7 +252,7 @@ def render():
                     sample["sample_type"],
                     "material_type": sample.get("material_type"),
                         "rock_number":
-                    sample.get("rock_number")   
+                    sample.get("rock_number")
 
                 })
 
@@ -269,7 +271,7 @@ def render():
                 st.success(
                     "Samples Added"
                 )
-                st.cache_data.clear()   
+                st.cache_data.clear()
                 st.rerun()
 
     # =====================================
@@ -368,7 +370,6 @@ def render():
 
     for depth_row in depths.data:
 
-        
         with st.container(
             border=True
         ):
@@ -629,19 +630,19 @@ def render():
             st.success(
                 "Submitted For Review"
             )
-            
+
             st.cache_data.clear()
             st.rerun()
-            
+
         submitted_submissions = (
-        supabase
-        .table("specific_gravity_submissions")
-        .select("*")
-        .eq("project_id", project_id)
-        .eq("borehole_id", borehole_id)
-        .eq("status", "Submitted")
-        .execute()
-    ).data
+            supabase
+            .table("specific_gravity_submissions")
+            .select("*")
+            .eq("project_id", project_id)
+            .eq("borehole_id", borehole_id)
+            .eq("status", "Submitted")
+            .execute()
+        ).data
 
     # st.write("Submitted submissions:", submitted_submissions)
     submitted = (

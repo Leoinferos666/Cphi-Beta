@@ -45,7 +45,7 @@ def generate_sample_log(
         if current_type == "SPT":
 
             current_type = "UDS"
-            current_type = "CORE"
+            # current_type = "CORE"
 
         else:
 

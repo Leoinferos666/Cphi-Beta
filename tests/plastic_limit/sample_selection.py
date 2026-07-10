@@ -95,7 +95,7 @@ def render():
                         .insert({
                             "project_id": st.session_state["selected_project"],
                             "borehole_id": borehole_id,
-                            "sample_id": sample["id"],
+                            "sample_id": sample["sample_id"],
                             "status": "Draft",
                             "review_status": "Draft"
                         })

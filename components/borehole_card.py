@@ -181,7 +181,8 @@ def render(
 
                         [
                             "SPT",
-                            "UDS"
+                            "UDS",
+                            "CORE"
                         ],
 
                         key=f"fst_{bh['id']}"

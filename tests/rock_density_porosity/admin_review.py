@@ -17,8 +17,9 @@ def render(review, project, borehole):
             .select("*")
             .eq("project_id", review["project_id"])
             .eq("borehole_id", review["borehole_id"])
-            # .eq("status", "Submitted")
-            .in_("review_status", ["Pending", "Approved"])
+            .in_("review_status", ["Pending", "Approved", "Returned"])
+            .order("created_at", desc=True)
+            .limit(1)
             .execute()
         ).data
 

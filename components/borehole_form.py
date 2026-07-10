@@ -64,7 +64,8 @@ def render(
 
                 [
                     "SPT",
-                    "UDS"
+                    "UDS",
+                    "CORE"
                 ]
 
             )

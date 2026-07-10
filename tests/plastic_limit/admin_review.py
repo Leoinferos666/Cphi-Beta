@@ -108,143 +108,143 @@ def render(review, project, borehole):
 
                 st.subheader("Technician Readings")
 
-        for trial in trials:
+            for trial in trials:
 
-            with st.container(border=True):
+                with st.container(border=True):
 
-                st.write(f"### Trial {trial['trial_no']}")
+                    st.write(f"### Trial {trial['trial_no']}")
 
-                c1, c2, c3 = st.columns(3)
+                    c1, c2, c3 = st.columns(3)
 
-                with c1:
-                    # st.metric("Blows", trial["blows"])
-                    
-                    st.metric("Container No", trial["can_no"])
+                    with c1:
+                        # st.metric("Blows", trial["blows"])
+                        
+                        st.metric("Container No", trial["can_no"])
 
-                with c2:
-                    st.metric("Container Weight", trial["can_weight"])
-                    st.metric("Wet + Container", trial["wet_soil_can"])
+                    with c2:
+                        st.metric("Container Weight", trial["can_weight"])
+                        st.metric("Wet + Container", trial["wet_soil_can"])
 
-                with c3:
-                    st.metric("Dry + Container", trial["dry_soil_can"])
-                    st.metric(
-                        "Water Content",
-                        f"{(trial.get('water_content') or 0):.2f} %"
-                    )
+                    with c3:
+                        st.metric("Dry + Container", trial["dry_soil_can"])
+                        st.metric(
+                            "Water Content",
+                            f"{(trial.get('water_content') or 0):.2f} %"
+                        )
 
-            status = trial.get("approval_status", "Pending")
+                status = trial.get("approval_status", "Pending")
 
-            if status == "Approved":
-                st.success("Approved")
+                if status == "Approved":
+                    st.success("Approved")
 
-            elif status == "Returned":
-                st.error("Returned")
+                elif status == "Returned":
+                    st.error("Returned")
 
-            else:
-                st.warning("Pending")
+                else:
+                    st.warning("Pending")
 
-            existing_comment = (
-                trial.get("reviewer_comments")
-                or ""
-            )
+                existing_comment = (
+                    trial.get("reviewer_comments")
+                    or ""
+                )
 
-            trial_comment = st.text_area(
-                "Reviewer Comment",
-                value=existing_comment,
-                key=f"pl_comment_{trial['id']}"
-            )
+                trial_comment = st.text_area(
+                    "Reviewer Comment",
+                    value=existing_comment,
+                    key=f"pl_comment_{trial['id']}"
+                )
 
-            a1, a2 = st.columns(2)
+                a1, a2 = st.columns(2)
 
-            with a1:
+                with a1:
 
-                if st.button(
-                    "Approve Trial",
-                    key=f"pl_approve_{trial['id']}"
-                ):
+                    if st.button(
+                        "Approve Trial",
+                        key=f"pl_approve_{trial['id']}"
+                    ):
 
-                    (
-                        supabase
-                        .table("pl_trials")
-                        .update({
-                            "approval_status": "Approved",
-                            "reviewer_comments": trial_comment,
-                            "locked": True
-                        })
-                        .eq("id", trial["id"])
-                        .execute()
-                    )
-                    (
-                        supabase
-                        .table("pl_submissions")
-                        .update({
-                            "status": "Approved",
-                            "review_status": "Approved"
-                        })
-                        .eq("id", submission["id"])
-                        .execute()
-                    )
+                        (
+                            supabase
+                            .table("pl_trials")
+                            .update({
+                                "approval_status": "Approved",
+                                "reviewer_comments": trial_comment,
+                                "locked": True
+                            })
+                            .eq("id", trial["id"])
+                            .execute()
+                        )
+                        (
+                            supabase
+                            .table("pl_submissions")
+                            .update({
+                                "status": "Approved",
+                                "review_status": "Approved"
+                            })
+                            .eq("id", submission["id"])
+                            .execute()
+                        )
 
-                    (
-                        supabase
-                        .table("reviews")
-                        .update({
-                            "status": "Approved"
-                        })
-                        .eq("id", review["id"])
-                        .execute()
-                    )
+                        (
+                            supabase
+                            .table("reviews")
+                            .update({
+                                "status": "Approved"
+                            })
+                            .eq("id", review["id"])
+                            .execute()
+                        )
 
-                    st.success(
-                        f"Trial {trial['trial_no']} Approved"
-                    )
+                        st.success(
+                            f"Trial {trial['trial_no']} Approved"
+                        )
 
-                    st.rerun()
+                        st.rerun()
 
-            with a2:
+                with a2:
 
-                if st.button(
-                    "Return Trial",
-                    key=f"pl_return_{trial['id']}"
-                ):
+                    if st.button(
+                        "Return Trial",
+                        key=f"pl_return_{trial['id']}"
+                    ):
 
-                    (
-                        supabase
-                        .table("pl_trials")
-                        .update({
-                            "approval_status": "Returned",
-                            "reviewer_comments": trial_comment,
-                            "locked": False
-                        })
-                        .eq("id", trial["id"])
-                        .execute()
-                    )
-                    (
-                        supabase
-                        .table("pl_submissions")
-                        .update({
-                            "status": "Draft",
-                            "review_status": "Returned"
-                        })
-                        .eq("id", submission["id"])
-                        .execute()
-                    )
+                        (
+                            supabase
+                            .table("pl_trials")
+                            .update({
+                                "approval_status": "Returned",
+                                "reviewer_comments": trial_comment,
+                                "locked": False
+                            })
+                            .eq("id", trial["id"])
+                            .execute()
+                        )
+                        (
+                            supabase
+                            .table("pl_submissions")
+                            .update({
+                                "status": "Draft",
+                                "review_status": "Returned"
+                            })
+                            .eq("id", submission["id"])
+                            .execute()
+                        )
 
-                    (
-                        supabase
-                        .table("reviews")
-                        .update({
-                            "status": "Returned"
-                        })
-                        .eq("id", review["id"])
-                        .execute()
-                    )
+                        (
+                            supabase
+                            .table("reviews")
+                            .update({
+                                "status": "Returned"
+                            })
+                            .eq("id", review["id"])
+                            .execute()
+                        )
 
 
-                    st.warning(
-                        f"Trial {trial['trial_no']} Returned"
-                    )
+                        st.warning(
+                            f"Trial {trial['trial_no']} Returned"
+                        )
 
-                    st.rerun()
-                    
-                    
+                        st.rerun()
+                        
+                        

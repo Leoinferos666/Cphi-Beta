@@ -7,15 +7,16 @@ supabase = get_supabase()
 def render(review, project, borehole):
 
     # st.error("UCS render called")
-    if review["test_name"] == "Point Load Strength Index":
-        st.subheader("Point Load Strength Index")
+    if review["test_name"] == "Unconfined Compressive Test":
+        st.subheader("Unconfined Compressive Test")
 
         submissions = (
             supabase
-            .table("point_load_submissions")
+            .table("ucs_submissions")
             .select("*")
             .eq("project_id", review["project_id"])
             .eq("borehole_id", review["borehole_id"])
+            # .eq("status", "Submitted")
             .in_("review_status", ["Pending", "Approved", "Returned"])
             .order("created_at", desc=True)
             .limit(1)
@@ -38,7 +39,7 @@ def render(review, project, borehole):
 
                 specimens = (
                     supabase
-                    .table("point_load_specimens")
+                    .table("ucs_specimens")
                     .select("*")
                     .eq("submission_id", submission["id"])
                     .order("specimen_no")
@@ -77,7 +78,7 @@ def render(review, project, borehole):
                 # st.write(
                 #     f"Flow Index : {submission['flow_index']:.2f}"
                 # )
-                st.subheader("Point Load Results")
+                st.subheader("UCS Results")
 
         #         st.subheader("Calculated Results")
 
@@ -91,7 +92,7 @@ def render(review, project, borehole):
 
         #         supabase
 
-        #         .table("point_load_specimens")
+        #         .table("ucs_specimens")
 
         #         .select("*")
 
@@ -117,57 +118,44 @@ def render(review, project, borehole):
                     c1, c2, c3 = st.columns(3)
 
                     with c1:
-                        st.metric("Diameter (mm)", specimen["diameter"])
-                        st.metric("Length (mm)", specimen["length"])
-                        st.metric("Width (mm)", specimen["width"])
+                        st.metric("Rock Number", specimen["rock_number"])
+                        st.metric("Diameter (cm)", specimen["diameter"])
+                        st.metric("Length (cm)", specimen["length"])
 
                     with c2:
+                        st.metric(
+                                    "L/D Ratio",
+                                    "-" if specimen["ld_ratio"] is None else round(specimen["ld_ratio"], 2)
+                                )
 
                         st.metric(
-                            "Test Type",
-                            specimen.get("test_type", "-")
+                            "Area (cm²)",
+                            "-" if specimen["area"] is None else round(specimen["area"], 2)
                         )
 
                         st.metric(
-                            "Dial Gauge",
-                            "-" if specimen.get("dial_gauge") is None
-                            else round(specimen["dial_gauge"], 2)
+                            "Volume (cm³)",
+                            "-" if specimen["volume"] is None else round(specimen["volume"], 2)
                         )
 
-                        st.metric(
-                            "Load (kN)",
-                            "-" if specimen.get("load_kn") is None
-                            else round(specimen["load_kn"], 2)
-                        )
                 
                     with c3:
-
-                         st.metric(
-                            "Failure Load (N)",
-                            "-" if specimen.get("failure_load") is None
-                            else round(specimen["failure_load"], 2)
+                        st.metric(
+                        "Weight (g)",
+                        "-" if specimen["weight"] is None else round(specimen["weight"], 2)
                     )
 
                     st.metric(
-                        "D¹·⁵ × D*⁰·⁵",
-                        "-" if specimen.get("d_factor") is None
-                        else round(specimen["d_factor"], 2)
+                        "Bulk Density",
+                        "-" if specimen["bulk_density"] is None else round(specimen["bulk_density"], 3)
                     )
 
                     st.metric(
-                        "Is50",
-                        "-" if specimen.get("is50") is None
-                        else round(specimen["is50"], 3)
-                    )
-
-                    st.metric(
-                        "qc",
-                        "-" if specimen.get("qc") is None
-                        else round(specimen["qc"], 2)
-                    )
+                        "UCS (MPa)",
+                        "-" if specimen["ucs"] is None else round(specimen["ucs"], 2)
+                    )   
                 status = specimen.get("approval_status", "Pending")
                 specimen_locked = specimen.get("locked", False)
-                
 
                 if status == "Approved":
                     st.success("Approved")
@@ -179,7 +167,7 @@ def render(review, project, borehole):
                 review_comment = st.text_area(
                     "Reviewer Comment",
                     value=specimen.get("reviewer_comments", ""),
-                    key=f"pl_comment_{specimen['id']}",
+                    key=f"ucs_comment_{specimen['id']}",
                     disabled=specimen_locked
                 )
 
@@ -189,13 +177,13 @@ def render(review, project, borehole):
 
                     if st.button(
                         "Approve Specimen",
-                        key=f"pl_approve_{specimen['id']}",
+                        key=f"ucs_approve_{specimen['id']}",
                         disabled=specimen_locked
                     ):
 
                         (
                             supabase
-                            .table("point_load_specimens")
+                            .table("ucs_specimens")
                             .update({
                                 "approval_status": "Approved",
                                 "reviewer_comments": review_comment,
@@ -210,7 +198,7 @@ def render(review, project, borehole):
 
                         all_specimens = (
                             supabase
-                            .table("point_load_specimens")
+                            .table("ucs_specimens")
                             .select("approval_status")
                             .eq("submission_id", submission["id"])
                             .execute()
@@ -225,7 +213,7 @@ def render(review, project, borehole):
 
                             (
                                 supabase
-                                .table("point_load_submissions")
+                                .table("ucs_submissions")
                                 .update({
                                     "status": "Approved",
                                     "review_status": "Approved"
@@ -257,13 +245,13 @@ def render(review, project, borehole):
 
                     if st.button(
                         "Return Specimen",
-                        key=f"pl_return_{specimen['id']}", 
+                        key=f"ucs_return_{specimen['id']}", 
                         disabled=specimen_locked
                     ):
 
                         (
                             supabase
-                            .table("point_load_specimens")
+                            .table("ucs_specimens")
                             .update({
                                 "approval_status": "Returned",
                                 "reviewer_comments": review_comment,
@@ -274,7 +262,7 @@ def render(review, project, borehole):
                         )
                         (
                             supabase
-                            .table("point_load_submissions")
+                            .table("ucs_submissions")
                             .update({
                                 "status": "Draft",
                                 "review_status": "Returned"

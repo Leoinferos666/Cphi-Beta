@@ -7,11 +7,15 @@ from utils.ui import apply_theme
 
 from tests.gsa.report import render_gsa_report
 from tests.liquid_limit.report import render_report
+from tests.point_load.admin_review import render as render_point_load_review
 # from tests.plastic_limit.admin_review import render as render_pl_review   
 from tests.plastic_limit.admin_review import render as render_pl_review
 from tests.rock_density_porosity.admin_review import render as render_rdp_review
 from tests.direct_shear.admin_review import render as render_ds_review
 import pandas as pd
+
+
+from tests.ucs.admin_review import render as render_ucs_review
 
 
 st.set_page_config(
@@ -313,7 +317,7 @@ st.subheader(
     # =====================================
     # SPECIFIC GRAVITY REVIEW
     # =====================================
-
+# st.write("Current Test Name:", repr(review["test_name"]))
 if review["test_name"] == "Specific Gravity":
 
         submission_query = (
@@ -567,12 +571,18 @@ if review["test_name"].strip().lower() == "direct shear":
 elif review["test_name"] == "Rock Density & Porosity":
     render_rdp_review(review, project, borehole)
 
+# elif review["test_name"] == "Plastic Limit":
+#     render_pl_review(review, project, borehole)
+# if review["test_name"].strip().lower() == "direct shear":
+#     render_ds_review(review, project, borehole)
 elif review["test_name"] == "Plastic Limit":
     render_pl_review(review, project, borehole)
-if review["test_name"].strip().lower() == "direct shear":
-    render_ds_review(review, project, borehole)
-elif review["test_name"] == "Plastic Limit":
-    render_pl_review(review, project, borehole)
+elif review["test_name"] == "Unconfined Compressive Test":
+    render_ucs_review(review, project, borehole)
+elif review["test_name"] == "Point Load Strength Index":
+    render_point_load_review(review, project, borehole)
+    
+    
     
 elif review["test_name"] == "Grain Size Analysis":
 

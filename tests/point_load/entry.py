@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 from tests.point_load.calculations import (
     STANDARD_CORE_DIAMETER,
+    calculate_load_kn,
+    calculate_failure_load,
+    calculate_d_factor,
     calculate_is50,
     calculate_qc
 )
@@ -29,10 +32,22 @@ def render():
 
     st.title("Point Load Strength Index Test")
 
-    st.write(f"Project ID : {project_id}")
-    st.write(f"Borehole ID : {borehole_id}")
+    # st.write(f"Project ID : {project_id}")
+    # st.write(f"Borehole ID : {borehole_id}")
 
     st.divider()
+    # ---------------------------------
+    # Dial Gauge Constant
+    # ---------------------------------
+    if "point_load_dial_constant" not in st.session_state:
+        st.session_state.point_load_dial_constant = 1.0
+    st.session_state.point_load_dial_constant = st.number_input(
+        "Dial Gauge Constant (kN/div)",
+        min_value=0.0,
+        value=float(st.session_state.point_load_dial_constant),
+        step=0.01,
+    )
+
 
     # ---------------------------------
     # Find / Create Submission
@@ -51,6 +66,10 @@ def render():
     if result:
 
         submission = result[0]
+        st.session_state.point_load_dial_constant = (
+            submission.get("dial_gauge_constant")
+            or 1.0
+        )
 
     else:
 
@@ -61,7 +80,8 @@ def render():
                 "project_id": project_id,
                 "borehole_id": borehole_id,
                 "status": "Draft",
-                "review_status": "Draft"
+                "review_status": "Draft",
+                "dial_gauge_constant": 1.0
             })
             .execute()
         ).data[0]
@@ -102,10 +122,12 @@ def render():
                     "Rock Number": row["rock_number"],
                     "Std. Core Diameter": row["standard_core_diameter"],
                     "Diameter": row["diameter"],
+                    "D¹·⁵ × D*⁰·⁵": row.get("d_factor"),
                     "Length": row["length"],
                     "Width": row["width"],
                     "Test Type": row["test_type"],
                     "Dial Gauge": row["dial_gauge"],
+                    "Load (kN)": row.get("load_kn"),
                     "Failure Load": row["failure_load"],
                     "Is50": row["is50"],
                     "qc": row["qc"],
@@ -123,10 +145,12 @@ def render():
                     "Rock Number": "",
                     "Std. Core Diameter": 50.0,
                     "Diameter": None,
+                    "D¹·⁵ × D*⁰·⁵": None,
                     "Length": None,
                     "Width": None,
                     "Test Type": "Diametral",
                     "Dial Gauge": None,
+                    "Load (kN)": None,
                     "Failure Load": None,
                     "Is50": None,
                     "qc": None,
@@ -137,6 +161,44 @@ def render():
     # Buttons
     # ---------------------------------
 
+   
+
+    # with c2:
+
+    #     if st.button(
+    #         "🗑 Remove Selected",
+    #         use_container_width=True
+    #     ):
+
+    #         df = st.session_state.point_load_df
+
+    #         df = df[df["Select"] == False].reset_index(drop=True)
+
+    #         if df.empty:
+
+    #             df = pd.DataFrame([{
+    #                 "Select": False,
+    #                 "From": None,
+    #                 "To": None,
+    #                 "Rock Number": "",
+    #                 "Diameter": None,
+    #                 "Std. Core Diameter": 50.0,
+    #                 "D¹·⁵ × D*⁰·⁵": None,
+    #                 "Length": None,
+    #                 "Width": None,
+    #                 "Test Type": "Diametral",
+    #                 "Dial Gauge": None,
+    #                 "Load (kN)": None,
+    #                 "Failure Load": None,
+    #                 "Is50": None,
+    #                 "qc": None,
+    #             }])
+
+    #         st.session_state.point_load_df = df
+
+    #         st.rerun()
+        
+    st.session_state.point_load_submission_loaded = current_submission
     c1, c2 = st.columns(2)
 
     with c1:
@@ -153,11 +215,12 @@ def render():
                 "Rock Number": "",
                 "Std. Core Diameter": 50.0,
                 "Diameter": None,
-                
+                "D¹·⁵ × D*⁰·⁵": None,
                 "Length": None,
                 "Width": None,
                 "Test Type": "Diametral",
                 "Dial Gauge": None,
+                "Load (kN)": None,
                 "Failure Load": None,
                 "Is50": None,
                 "qc": None,
@@ -176,7 +239,21 @@ def render():
             use_container_width=True
         ):
 
-            df = st.session_state.point_load_df
+            edited_rows = st.session_state.get(
+                "point_load_editor",
+                {}
+            ).get(
+                "edited_rows",
+                {}
+            )
+
+            df = st.session_state.point_load_df.copy()
+
+            for row_index, changes in edited_rows.items():
+
+                for column, value in changes.items():
+
+                    df.at[row_index, column] = value
 
             df = df[df["Select"] == False].reset_index(drop=True)
 
@@ -187,13 +264,14 @@ def render():
                     "From": None,
                     "To": None,
                     "Rock Number": "",
-                    "Diameter": None,
                     "Std. Core Diameter": 50.0,
-
+                    "Diameter": None,
+                    "D¹·⁵ × D*⁰·⁵": None,
                     "Length": None,
                     "Width": None,
                     "Test Type": "Diametral",
                     "Dial Gauge": None,
+                    "Load (kN)": None,
                     "Failure Load": None,
                     "Is50": None,
                     "qc": None,
@@ -202,14 +280,13 @@ def render():
             st.session_state.point_load_df = df
 
             st.rerun()
-        
-    st.session_state.point_load_submission_loaded = current_submission
-
     # ---------------------------------
     # Editable Table
     # ---------------------------------
-
+    # st.write(st.session_state.point_load_df.columns.tolist())
     edited_df = st.data_editor(
+    
+        
     st.session_state.point_load_df,
     use_container_width=True,
     disabled=read_only,
@@ -243,8 +320,11 @@ def render():
             "D (mm)",
             format="%.2f"
         ),
-
-    
+        "D¹·⁵ × D*⁰·⁵": st.column_config.NumberColumn(
+            "D¹·⁵ × D*⁰·⁵",
+            format="%.2f",
+            disabled=True
+        ),
 
         "Length": st.column_config.NumberColumn(
             "L (mm)",
@@ -269,7 +349,10 @@ def render():
             "Dial",
             format="%.2f"
         ),
-
+        "Load (kN)": st.column_config.NumberColumn(
+            "Load (kN)",
+            format="%.2f"
+        ),
         "Failure Load": st.column_config.NumberColumn(
             "P (N)",
             format="%.2f"
@@ -288,6 +371,7 @@ def render():
         ),
     }
 )
+   
     
     if not read_only:
         
@@ -320,17 +404,33 @@ def render():
 
                 df.at[index, "Std. Core Diameter"] = STANDARD_CORE_DIAMETER
 
+                load_kn = calculate_load_kn(
+                        row["Dial Gauge"],
+                        st.session_state.point_load_dial_constant,
+                        row["Load (kN)"]
+                    )
+
+                failure_load = calculate_failure_load(load_kn)
+
+                d_factor = calculate_d_factor(
+                        row["Diameter"],
+                        row["Std. Core Diameter"]
+                    )
+
                 is50 = calculate_is50(
-                    row["Failure Load"],
-                    row["Diameter"]
-                )
+                        failure_load,
+                        row["Diameter"]
+                    )
 
                 qc = calculate_qc(is50)
 
+                df.at[index, "Load (kN)"] = load_kn
+                df.at[index, "Failure Load"] = failure_load
+                df.at[index, "D¹·⁵ × D*⁰·⁵"] = d_factor
                 df.at[index, "Is50"] = is50
                 df.at[index, "qc"] = qc
 
-            st.session_state.point_load_df = df
+                st.session_state.point_load_df = df
 
             # -----------------------------
             # Delete old rows
@@ -375,6 +475,9 @@ def render():
                         "test_type": row["Test Type"],
 
                         "dial_gauge": row["Dial Gauge"],
+                        "load_kn": row["Load (kN)"],
+
+                        "d_factor": row["D¹·⁵ × D*⁰·⁵"],
 
                         "failure_load": row["Failure Load"],
 
@@ -400,7 +503,16 @@ def render():
                 .eq("id", submission["id"])
                 .execute()
             )
-
+            (
+                supabase
+                .table("point_load_submissions")
+                .update({
+                    "dial_gauge_constant":
+                    st.session_state.point_load_dial_constant
+                })
+                .eq("id", submission["id"])
+                .execute()
+            )
             st.success("Draft Saved")
 
             st.rerun()
@@ -416,16 +528,31 @@ def render():
 
                 df.at[index, "Std. Core Diameter"] = STANDARD_CORE_DIAMETER
 
+                load_kn = calculate_load_kn(
+                    row["Dial Gauge"],
+                    st.session_state.point_load_dial_constant,
+                    row["Load (kN)"]
+                )
+
+                failure_load = calculate_failure_load(load_kn)
+
+                d_factor = calculate_d_factor(
+                    row["Diameter"],
+                    row["Std. Core Diameter"]
+                )
+
                 is50 = calculate_is50(
-                    row["Failure Load"],
+                    failure_load,
                     row["Diameter"]
                 )
 
                 qc = calculate_qc(is50)
 
+                df.at[index, "Load (kN)"] = load_kn
+                df.at[index, "Failure Load"] = failure_load
+                df.at[index, "D¹·⁵ × D*⁰·⁵"] = d_factor
                 df.at[index, "Is50"] = is50
                 df.at[index, "qc"] = qc
-
             st.session_state.point_load_df = df
             (
                 supabase
@@ -465,6 +592,9 @@ def render():
                         "test_type": row["Test Type"],
 
                         "dial_gauge": row["Dial Gauge"],
+                        "load_kn": row["Load (kN)"],
+
+                        "d_factor": row["D¹·⁵ × D*⁰·⁵"],    
 
                         "failure_load": row["Failure Load"],
 
@@ -474,9 +604,19 @@ def render():
 
                         "approval_status": "Pending",
 
-                        "locked": True
+                        "locked": False
 
                     })
+                    .execute()
+                )
+                (
+                    supabase
+                    .table("point_load_submissions")
+                    .update({
+                        "dial_gauge_constant":
+                        st.session_state.point_load_dial_constant
+                    })
+                    .eq("id", submission["id"])
                     .execute()
                 )
             (

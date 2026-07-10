@@ -19,7 +19,7 @@ def calculate_area(diameter):
         if diameter in [0, None]:
             return None
 
-        return math.pi * diameter * diameter / 4
+        return (3.14 * diameter * diameter) / 4
 
     except:
         return None
@@ -52,16 +52,11 @@ def calculate_bulk_density(weight, volume):
 def calculate_ucs(failure_load, area):
 
     try:
-        if area in [0, None]:
+
+        if failure_load is None or area in [0, None]:
             return None
 
-        # kN → N
-        load = failure_load * 1000
-
-        # cm² → mm²
-        area_mm2 = area * 100
-
-        return load / area_mm2
+        return (failure_load * 10) / area
 
     except:
         return None

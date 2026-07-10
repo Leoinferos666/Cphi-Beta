@@ -89,7 +89,10 @@ def render():
     # Initialize DataFrame
     # ---------------------------------
 
-    if True:
+    if (
+        "ucs_df" not in st.session_state
+        or st.session_state.get("ucs_submission_loaded") != current_submission
+    ):
         if saved_rows:
   
             # if True:
@@ -168,7 +171,7 @@ def render():
         ):
 
             new_row = {
-                                    "Select": False,
+                            "Select": False,
 
                     "From": None,
                     "To": None,

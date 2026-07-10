@@ -414,8 +414,18 @@ def render():
                 )
 
                 if trial_count >= required_trials:
+
                     st.success("Saved")
+
+                    if depth_row.get("specific_gravity") is not None:
+
+                        st.metric(
+                            "Specific Gravity",
+                            round(depth_row["specific_gravity"], 3)
+                        )
+
                 else:
+
                     st.warning("Pending")
 
             with c2:
@@ -492,6 +502,12 @@ def render():
                     row["m4"]
 
                 )
+                if sg is not None:
+
+                    st.metric(
+                        "Specific Gravity",
+                        round(sg, 3)
+                    )
 
                 (
                     supabase

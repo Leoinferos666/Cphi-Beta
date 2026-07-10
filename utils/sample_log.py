@@ -42,14 +42,12 @@ def generate_sample_log(
 
         current_depth += 1.5
 
-        if current_type == "SPT":
-
-            current_type = "UDS"
-            # current_type = "CORE"
-
+        if first_sample_type == "CORE":
+         current_type = "CORE"
+        elif current_type == "SPT":
+         current_type = "UDS"
         else:
-
-            current_type = "SPT"
+         current_type = "SPT"
 
     if payload:
 
@@ -90,13 +88,12 @@ def generate_sample_log(
 
         current_depth += 1.5
 
-        if current_type == "SPT":
-
-            current_type = "UDS"
-
+        if first_sample_type == "CORE":
+         current_type = "CORE"
+        elif current_type == "SPT":
+         current_type = "UDS"
         else:
-
-            current_type = "SPT"
+         current_type = "SPT"
 
 
 def get_sample_log(

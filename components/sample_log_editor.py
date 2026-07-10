@@ -116,7 +116,7 @@ def render(
 
                 "Manual Sample",
 
-                "Core",
+                "CORE",
 
                 "Water Sample",
 

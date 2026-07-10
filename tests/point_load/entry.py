@@ -39,14 +39,14 @@ def render():
     # ---------------------------------
     # Dial Gauge Constant
     # ---------------------------------
-    if "point_load_dial_constant" not in st.session_state:
-        st.session_state.point_load_dial_constant = 1.0
-    st.session_state.point_load_dial_constant = st.number_input(
-        "Dial Gauge Constant (kN/div)",
-        min_value=0.0,
-        value=float(st.session_state.point_load_dial_constant),
-        step=0.01,
-    )
+    # if "point_load_dial_constant" not in st.session_state:
+    #     st.session_state.point_load_dial_constant = 1.0
+    # st.session_state.point_load_dial_constant = st.number_input(
+    #     "Dial Gauge Constant (kN/div)",
+    #     min_value=0.0,
+    #     value=float(st.session_state.point_load_dial_constant),
+    #     step=0.01,
+    # )
 
 
     # ---------------------------------
@@ -85,7 +85,12 @@ def render():
             })
             .execute()
         ).data[0]
+        if "point_load_dial_constant" not in st.session_state:
 
+            st.session_state.point_load_dial_constant = (
+                submission.get("dial_gauge_constant")
+                or 1.0
+            )
     st.session_state["selected_point_load_submission"] = submission["id"]
     current_submission = submission["id"]
     saved_rows = (

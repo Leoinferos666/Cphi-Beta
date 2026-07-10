@@ -40,11 +40,11 @@ def render():
     # Dial Gauge Constant
     # ---------------------------------
     # if "point_load_dial_constant" not in st.session_state:
-    #     st.session_state.point_load_dial_constant = 1.0
-    # st.session_state.point_load_dial_constant = st.number_input(
+    #     dial_constant = 1.0
+    # dial_constant = st.number_input(
     #     "Dial Gauge Constant (kN/div)",
     #     min_value=0.0,
-    #     value=float(st.session_state.point_load_dial_constant),
+    #     value=float(dial_constant),
     #     step=0.01,
     # )
 
@@ -66,7 +66,7 @@ def render():
     if result:
 
         submission = result[0]
-        st.session_state.point_load_dial_constant = (
+        dial_constant = (
             submission.get("dial_gauge_constant")
             or 1.0
         )
@@ -85,12 +85,13 @@ def render():
             })
             .execute()
         ).data[0]
-        if "point_load_dial_constant" not in st.session_state:
+    dial_constant = st.number_input(
+        "Dial Gauge Constant (kN/div)",
+        min_value=0.0,
+        value=float(submission.get("dial_gauge_constant") or 1.0),
+        step=0.01,
+    )
 
-            st.session_state.point_load_dial_constant = (
-                submission.get("dial_gauge_constant")
-                or 1.0
-            )
     st.session_state["selected_point_load_submission"] = submission["id"]
     current_submission = submission["id"]
     saved_rows = (
@@ -411,7 +412,7 @@ def render():
 
                 load_kn = calculate_load_kn(
                         row["Dial Gauge"],
-                        st.session_state.point_load_dial_constant,
+                        dial_constant,
                         row["Load (kN)"]
                     )
 
@@ -513,7 +514,7 @@ def render():
                 .table("point_load_submissions")
                 .update({
                     "dial_gauge_constant":
-                    st.session_state.point_load_dial_constant
+                    dial_constant
                 })
                 .eq("id", submission["id"])
                 .execute()
@@ -535,7 +536,7 @@ def render():
 
                 load_kn = calculate_load_kn(
                     row["Dial Gauge"],
-                    st.session_state.point_load_dial_constant,
+                    dial_constant,
                     row["Load (kN)"]
                 )
 
@@ -619,7 +620,7 @@ def render():
                     .table("point_load_submissions")
                     .update({
                         "dial_gauge_constant":
-                        st.session_state.point_load_dial_constant
+                        dial_constant
                     })
                     .eq("id", submission["id"])
                     .execute()

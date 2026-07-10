@@ -226,11 +226,11 @@ def render():
                         sample
                     )
 
-        add_samples = (
-            st.form_submit_button(
-                "Create SG Test Entries"
+            add_samples = (
+                st.form_submit_button(
+                    "Create SG Test Entries"
+                )
             )
-        )
 
         if add_samples:
 

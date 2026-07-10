@@ -502,12 +502,12 @@ def render():
                     row["m4"]
 
                 )
-                if sg is not None:
+                # if sg is not None:
 
-                    st.metric(
-                        "Specific Gravity",
-                        round(sg, 3)
-                    )
+                #     st.metric(
+                #         "Specific Gravity",
+                #         round(sg, 3)
+                #     )
 
                 (
                     supabase

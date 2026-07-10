@@ -381,6 +381,18 @@ def render():
                         not t1_returned
                     )
                 )
+                t1_sg = calculate_specific_gravity(
+                    t1_m1,
+                    t1_m2,
+                    t1_m3,
+                    t1_m4
+                )
+
+                if t1_sg > 0:
+                    st.metric(
+                        "Specific Gravity",
+                        t1_sg
+                    )
                 if not is_rock:
                     st.divider()
 
@@ -425,6 +437,18 @@ def render():
                         not t2_returned
                     )
                 )
+                t2_sg = calculate_specific_gravity(
+                    t2_m1,
+                    t2_m2,
+                    t2_m3,
+                    t2_m4
+                )
+
+                if t2_sg > 0:
+                    st.metric(
+                        "Specific Gravity",
+                        t2_sg
+                    )
 
                 st.divider()
                 if not is_rock:
@@ -469,6 +493,18 @@ def render():
                         not t3_returned
                     )
                 )
+                t3_sg = calculate_specific_gravity(
+                    t3_m1,
+                    t3_m2,
+                    t3_m3,
+                    t3_m4
+                )
+
+                if t3_sg > 0:
+                    st.metric(
+                        "Specific Gravity",
+                        t3_sg
+                    )
 
                 save = st.form_submit_button(
                     "Save"

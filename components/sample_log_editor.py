@@ -52,7 +52,10 @@ def render(
 
         "dry_unit_weight",
 
-        "insitu_water_content"
+        "insitu_water_content",
+        "cr",
+        "rqd",
+        "rock_type",
 
     ]:
 
@@ -60,27 +63,34 @@ def render(
 
             df[col] = None
 
-    df = df[
-        [
-            "sample_id",
-            
-            "depth",
+    if borehole["first_sample_type"] == "CORE":
 
-            "sample_type",
-
-            "spt_n_value",
-
-            "bulk_density",
-
-            "dry_unit_weight",
-
-            "insitu_water_content",
-
-            "remarks"
-
+        df = df[
+            [
+                "sample_id",
+                "depth",
+                "sample_type",
+                "cr",
+                "rqd",
+                "rock_type",
+                "remarks"
+            ]
         ]
-    ]
 
+    else:
+
+        df = df[
+            [
+                "sample_id",
+                "depth",
+                "sample_type",
+                "spt_n_value",
+                "bulk_density",
+                "dry_unit_weight",
+                "insitu_water_content",
+                "remarks"
+            ]
+        ]
     edited = st.data_editor(
 
     df,
@@ -156,7 +166,22 @@ def render(
 
         st.column_config.TextColumn(
             "Remarks"
-        )
+        ),
+        "cr": st.column_config.NumberColumn(
+    "CR (%)",
+    min_value=0.0,
+    max_value=100.0,
+),
+
+"rqd": st.column_config.NumberColumn(
+    "RQD (%)",
+    min_value=0.0,
+    max_value=100.0,
+),
+
+"rock_type": st.column_config.TextColumn(
+    "Rock Type",
+)
 
     },
 

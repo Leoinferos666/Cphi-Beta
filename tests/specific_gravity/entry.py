@@ -223,11 +223,11 @@ def render():
                     )
 
             add_samples = (
-                st.form_submit_button(
-                    "Create SG Test Entries"
-                )
+            st.form_submit_button(
+                "Create SG Test Entries"
             )
-            
+        )
+        
 
         if add_samples:
 
@@ -248,7 +248,7 @@ def render():
                     "sample_type":
                     sample["sample_type"],
                     "material_type": sample.get("material_type"),
-                     "rock_number":
+                        "rock_number":
                     sample.get("rock_number")   
 
                 })

@@ -184,6 +184,11 @@ rows
         sample_id = row.get(
             "sample_id"
         )
+        cr = row.get("cr")
+
+        rqd = row.get("rqd")
+
+        rock_type = row.get("rock_type")
 
         if (
             depth is None
@@ -218,7 +223,16 @@ rows
             dry_unit_weight,
 
             "insitu_water_content":
-            insitu_water_content
+            insitu_water_content,
+
+            "cr":
+            cr,
+
+            "rqd":
+            rqd,
+
+            "rock_type":
+            rock_type
 
         })
 

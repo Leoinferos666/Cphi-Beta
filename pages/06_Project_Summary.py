@@ -1726,222 +1726,49 @@ else:
     # ROCK STRENGTH SUMMARY
     # =====================================
 
+# ==========================================
+# ROCK STRENGTH SUMMARY
+# ==========================================
+
 st.divider()
-
 st.header("Rock Strength Summary")
-# =====================================
-# LOAD ROCK SUMMARY
-# =====================================
 
-rock_summary = (
+summary_rows = []
+
+# ==========================================
+# Borehole Lookup
+# ==========================================
+
+boreholes = (
     supabase
-    .table("rock_strength_summary")
-    .select("*")
-    .eq("project_id", project_id)
-    .order("borehole_id")
-    .order("depth_from")
-    .execute()
-).data
-
-# st.write("Existing Summary Rows:", len(rock_summary))
-# =====================================
-# LOAD APPROVED ROCK DENSITY SUBMISSIONS
-# =====================================
-
-rdp_submissions = (
-    supabase
-    .table("rock_density_porosity_submissions")
-    .select("*")
+    .table("boreholes")
+    .select("id,bh_no")
     .eq("project_id", project_id)
     .execute()
 ).data
 
-# st.write(rdp_submissions)
-# =====================================
-# LOAD ROCK SPECIMENS
-# =====================================
+bh_lookup = {
+    row["id"]: row["bh_no"]
+    for row in boreholes
+}
 
-rdp_specimens = (
-    supabase
-    .table("rock_density_porosity_observations")
-    .select("*")
-    .execute()
-).data
-# =====================================
-# LOAD APPROVED POINT LOAD
-# =====================================
+# ==========================================
+# Point Load
+# ==========================================
 
 pl_submissions = (
     supabase
     .table("point_load_submissions")
-    .select("*")
+    .select("id,borehole_id")
     .eq("project_id", project_id)
     .eq("review_status", "Approved")
     .execute()
 ).data
 
-# st.write("Approved Point Load:", len(pl_submissions))
-# =====================================
-# LOAD POINT LOAD SPECIMENS
-# =====================================
-
-pl_specimens = (
-    supabase
-    .table("point_load_specimens")
-    .select("*")
-    .execute()
-).data
-approved_pl_ids = {
-    row["id"]
-    for row in pl_submissions
-}
-
-pl_specimens = [
-    row
-    for row in pl_specimens
-    if row["submission_id"] in approved_pl_ids
-]
 pl_submission_lookup = {
     row["id"]: row
     for row in pl_submissions
 }
-# st.write("Approved Point Load Specimens:", len(pl_specimens))
-# =====================================
-# CREATE SUMMARY ROWS FROM POINT LOAD
-# =====================================
-
-for specimen in pl_specimens:
-    submission = pl_submission_lookup[specimen["submission_id"]]
-    existing = (
-        supabase
-        .table("rock_strength_summary")
-        .select("id")
-        .eq("project_id", project_id)
-            .eq("borehole_id", submission["borehole_id"])
-            .eq("rock_number", specimen["rock_number"])
-            .execute()
-        ).data
-
-    if not existing:
-
-            (
-                supabase
-                .table("rock_strength_summary")
-                .insert({
-
-                    "project_id": project_id,
-
-                    "borehole_id": submission["borehole_id"],
-
-                    "rock_number": specimen["rock_number"],
-
-                    "method_of_drilling": None,
-
-                    "depth_from": specimen["depth_from"],
-
-                    "depth_to": specimen["depth_to"],
-
-                    "rock_sample_type": None,
-
-                    "description": None,
-
-                    "cr_percent": None,
-
-                    "rqd_percent": None
-
-                })
-                .execute()
-            )
-            rock_summary = (
-        supabase
-        .table("rock_strength_summary")
-        .select("*")
-        .eq("project_id", project_id)
-        .order("depth_from")
-        .execute()
-    ).data
-
-# st.write("Summary Rows After Insert:", len(rock_summary))
-import pandas as pd
-# =====================================
-# POINT LOAD LOOKUP
-# =====================================
-
-pl_submissions = (
-    supabase
-    .table("point_load_submissions")
-    .select("id")
-    .eq("project_id", project_id)
-    .eq("review_status", "Approved")
-    .execute()
-).data
-
-approved_pl_ids = {
-    row["id"]
-    for row in pl_submissions
-}
-
-pl_specimens = (
-    supabase
-    .table("point_load_specimens")
-    .select("*")
-    .execute()
-).data
-
-point_load_lookup = {}
-
-for specimen in pl_specimens:
-
-    if specimen["submission_id"] in approved_pl_ids:
-
-        point_load_lookup[
-            specimen["rock_number"]
-        ] = specimen
-rdp_lookup = {}
-
-rdp_submissions = (
-    supabase
-    .table("rock_density_porosity_submissions")
-    .select("id")
-    .eq("project_id", project_id)
-    .eq("review_status", "Approved")
-    .execute()
-).data
-
-approved_rdp = {
-    row["id"]
-    for row in rdp_submissions
-}
-
-rdp_specimens = (
-    supabase
-    .table("rock_density_porosity_observations")
-    .select("*")
-    .execute()
-).data
-
-for specimen in rdp_specimens:
-
-    if specimen["submission_id"] in approved_rdp:
-
-        rdp_lookup[
-            specimen["rock_number"]
-        ] = specimen
-point_load_lookup = {}
-
-pl_submissions = (
-    supabase
-    .table("point_load_submissions")
-    .select("id")
-    .eq("project_id", project_id)
-    .eq("review_status", "Approved")
-    .execute()
-).data
-
-approved_pl = {
-    row["id"]
-    for row in pl_submissions
-}
 
 pl_specimens = (
     supabase
@@ -1952,12 +1779,72 @@ pl_specimens = (
 
 for specimen in pl_specimens:
 
-    if specimen["submission_id"] in approved_pl:
+    submission = pl_submission_lookup.get(
+        specimen["submission_id"]
+    )
 
-        point_load_lookup[
-            specimen["rock_number"]
-        ] = specimen
-ucs_lookup = {}
+    if not submission:
+        continue
+
+    summary_rows.append({
+
+        "BH No":
+            bh_lookup.get(
+                submission["borehole_id"]
+            ),
+
+        "Test":
+            "Point Load",
+
+        "From":
+            specimen["depth_from"],
+
+        "To":
+            specimen["depth_to"],
+
+        "Rock No":
+            specimen["rock_number"],
+
+        "Method of Drilling":
+            "",
+
+        "Rock Type":
+            "",
+
+        "CR %":
+            None,
+
+        "RQD %":
+            None,
+
+        "Bulk Density":
+            None,
+
+        "Dry Density":
+            None,
+
+        "Porosity":
+            None,
+
+        "Specific Gravity":
+            None,
+
+        "Is(50)":
+            specimen["is50"],
+
+        "qc":
+            specimen["qc"],
+
+        "UCS":
+            None,
+
+        "Description":
+            ""
+    })
+
+# ==========================================
+# UCS
+# ==========================================
 
 ucs_submissions = (
     supabase
@@ -1972,8 +1859,7 @@ ucs_submission_lookup = {
     row["id"]: row
     for row in ucs_submissions
 }
-st.write("UCS Lookup")
-st.write(ucs_lookup)
+
 ucs_specimens = (
     supabase
     .table("ucs_specimens")
@@ -1987,16 +1873,155 @@ for specimen in ucs_specimens:
         specimen["submission_id"]
     )
 
-    if submission:
+    if not submission:
+        continue
 
-        ucs_lookup[
-            (
-                submission["borehole_id"],
-                specimen["rock_number"]
-            )
-        ] = specimen
-summary_rows = []
-sg_lookup = {}
+    summary_rows.append({
+
+        "BH No":
+            bh_lookup.get(
+                submission["borehole_id"]
+            ),
+
+        "Test":
+            "UCS",
+
+      "From": specimen.get("depth_from") or "--",
+
+"To": specimen.get("depth_to") or "--",
+        "Rock No":
+            specimen["rock_number"],
+
+        "Method of Drilling":
+            "",
+
+        "Rock Type":
+            "",
+
+        "CR %":
+            None,
+
+        "RQD %":
+            None,
+
+        "Bulk Density":
+            None,
+
+        "Dry Density":
+            None,
+
+        "Porosity":
+            None,
+
+        "Specific Gravity":
+            None,
+
+        "Is(50)":
+            None,
+
+        "qc":
+            None,
+
+        "UCS":
+            specimen["ucs"],
+
+        "Description":
+            ""
+    })
+
+# ==========================================
+# Rock Density & Porosity
+# ==========================================
+
+rdp_submissions = (
+    supabase
+    .table("rock_density_porosity_submissions")
+    .select("id,borehole_id")
+    .eq("project_id", project_id)
+    .eq("review_status", "Approved")
+    .execute()
+).data
+
+rdp_submission_lookup = {
+    row["id"]: row
+    for row in rdp_submissions
+}
+
+rdp_rows = (
+    supabase
+    .table("rock_density_porosity_observations")
+    .select("*")
+    .execute()
+).data
+
+for specimen in rdp_rows:
+
+    submission = rdp_submission_lookup.get(
+        specimen["submission_id"]
+    )
+
+    if not submission:
+        continue
+
+    summary_rows.append({
+
+        "BH No":
+            bh_lookup.get(
+                submission["borehole_id"]
+            ),
+
+        "Test":
+            "Rock Density",
+
+        "From":
+            specimen["depth_from"],
+
+        "To":
+            specimen["depth_to"],
+
+        "Rock No":
+            specimen["rock_number"],
+
+        "Method of Drilling":
+            "",
+
+        "Rock Type":
+            "",
+
+        "CR %":
+            None,
+
+        "RQD %":
+            None,
+
+        "Bulk Density":
+            specimen["bulk_density"],
+
+        "Dry Density":
+            specimen["dry_density"],
+
+        "Porosity":
+            specimen["porosity"],
+
+        "Specific Gravity":
+            None,
+
+        "Is(50)":
+            None,
+
+        "qc":
+            None,
+
+        "UCS":
+            None,
+
+        "Description":
+            ""
+    })
+
+# ==========================================
+# Specific Gravity (Core only)
+# ==========================================
 
 sg_submissions = (
     supabase
@@ -2012,240 +2037,99 @@ sg_submission_lookup = {
     for row in sg_submissions
 }
 
-sg_depths = (
+sg_rows = (
     supabase
     .table("specific_gravity_depths")
     .select("*")
     .execute()
 ).data
 
-for specimen in sg_depths:
+for specimen in sg_rows:
 
     submission = sg_submission_lookup.get(
         specimen["submission_id"]
     )
 
-    if submission and specimen.get("rock_number"):
+    if not submission:
+        continue
 
-        sg_lookup[
-            (
-                submission["borehole_id"],
-                specimen["rock_number"]
-            )
-        ] = specimen
+    if specimen.get("material_type") != "Rock":
+        continue
 
-for row in rock_summary:
-
-    borehole = (
-        supabase
-        .table("boreholes")
-        .select("bh_no")
-        .eq("id", row["borehole_id"])
-        .execute()
-    ).data
-
-    bh_no = ""
-
-    if borehole:
-        bh_no = borehole[0]["bh_no"]
-    pl = point_load_lookup.get(
-        row["rock_number"],
-        {}
-    )
-    rdp = rdp_lookup.get(row["rock_number"], {})
-    pl = point_load_lookup.get(row["rock_number"], {})
-    ucs = ucs_lookup.get(
-    (
-        row["borehole_id"],
-        row["rock_number"]
-    ),
-    {}
-)
-    sg = sg_lookup.get(
-    (
-        row["borehole_id"],
-        row["rock_number"]
-    ),
-    {}
-)
-    sample = (
-        supabase
-        .table("borehole_samples")
-        .select("*")
-        .eq("borehole_id", row["borehole_id"])
-        .eq("depth", row["depth_from"])
-        .limit(1)
-        .execute()
-    ).data
-    st.write(
-        "Looking for:",
-        row["rock_number"]
-    )
-
-    st.write(
-        "Found:",
-        ucs_lookup.get(row["rock_number"])
-    )
-
-    sample = sample[0] if sample else {}
     summary_rows.append({
 
-        "BH No": bh_no,
+        "BH No":
+            bh_lookup.get(
+                submission["borehole_id"]
+            ),
 
-        "Method of Drilling": row["method_of_drilling"],
+        "Test":
+            "Specific Gravity",
 
-        "From": row["depth_from"],
+        "From":
+            specimen["depth"],
 
-        "To": row["depth_to"],
+        "To":
+            specimen["depth"],
 
-        "Rock No": row["rock_number"],
+        "Rock No":
+            specimen["rock_number"],
 
-        "Rock Sample Type": sample.get("rock_sample_type"),
+        "Method of Drilling":
+            "",
 
-        "Description": row["description"],
+        "Rock Type":
+            specimen.get("rock_type"),
 
-        "CR %": sample.get("cr_percent"),
+        "CR %":
+            None,
 
-        "RQD %": sample.get("rqd_percent"),
+        "RQD %":
+            None,
 
-        "Bulk Density": rdp.get("bulk_density"),
-        "Dry Density": rdp.get("dry_density"),
-        "Porosity": rdp.get("porosity"),
-        "Specific Gravity": sg.get("specific_gravity"),
+        "Bulk Density":
+            None,
 
-        "Is(50)": pl.get("is50"),
-        "qc": pl.get("qc"),
+        "Dry Density":
+            None,
 
-        "UCS": ucs.get("ucs"),
+        "Porosity":
+            None,
 
+        "Specific Gravity":
+            specimen["specific_gravity"],
+
+        "Is(50)":
+            None,
+
+        "qc":
+            None,
+
+        "UCS":
+            None,
+
+        "Description":
+            ""
     })
 
+# ==========================================
+# Sort
+# ==========================================
+
+summary_rows = sorted(
+    summary_rows,
+    key=lambda r: (
+        r["BH No"] or "",
+        r["From"] if r["From"] is not None else 0,
+        r["Test"]
+    )
+)
+
 summary_df = pd.DataFrame(summary_rows)
-edited_summary = st.data_editor(
+
+st.data_editor(
     summary_df,
     use_container_width=True,
     hide_index=True,
-    key="rock_summary_editor",
-    column_config={
-
-        "BH No": st.column_config.TextColumn(
-            "BH No",
-            disabled=True
-        ),
-
-        "Method of Drilling": st.column_config.TextColumn(
-            "Method of Drilling"
-        ),
-
-        "From": st.column_config.NumberColumn(
-            "From",
-            disabled=True,
-            format="%.2f"
-        ),
-
-        "To": st.column_config.NumberColumn(
-            "To",
-            disabled=True,
-            format="%.2f"
-        ),
-
-        "Rock No": st.column_config.TextColumn(
-            "Rock No",
-            disabled=True
-        ),
-
-        "Rock Sample Type": st.column_config.TextColumn(
-            "Rock Sample Type",
-            disabled=True
-        ),
-
-        "Description": st.column_config.TextColumn(
-            "Description"
-        ),
-
-        "CR %": st.column_config.NumberColumn(
-            "CR %",
-            format="%.2f",
-            disabled=True
-        ),
-
-        "RQD %": st.column_config.NumberColumn(
-            "RQD %",
-            format="%.2f",
-            disabled=True
-        ),
-
-        "Bulk Density": st.column_config.NumberColumn(
-            "Bulk Density",
-            disabled=True,
-            format="%.3f"
-        ),
-
-        "Dry Density": st.column_config.NumberColumn(
-            "Dry Density",
-            disabled=True,
-            format="%.3f"
-        ),
-
-        "Porosity": st.column_config.NumberColumn(
-            "Porosity",
-            disabled=True,
-            format="%.2f"
-        ),
-        "Specific Gravity": st.column_config.NumberColumn(
-            "Specific Gravity",
-            disabled=True,
-            format="%.3f"
-        ),
-
-        "Is(50)": st.column_config.NumberColumn(
-            "Is(50)",
-            disabled=True,
-            format="%.2f"
-        ),
-
-        "qc": st.column_config.NumberColumn(
-            "qc",
-            disabled=True,
-            format="%.2f"
-        ),
-
-        "UCS": st.column_config.NumberColumn(
-            "UCS",
-            disabled=True,
-            format="%.2f"
-        ),
-
-    }
+    disabled=True
 )
-st.divider()
-
-if st.button(
-    "💾 Save Rock Summary",
-    use_container_width=True
-):
-
-    for index, row in edited_summary.iterrows():
-
-        summary = rock_summary[index]
-
-        (
-            supabase
-            .table("rock_strength_summary")
-            .update({
-
-                "method_of_drilling": row["Method of Drilling"],
-
-                "description": row["Description"]
-
-            })
-            .eq(
-                "id",
-                summary["id"]
-            )
-            .execute()
-        )
-
-    st.success("Rock Strength Summary Saved")
-
-    st.rerun()

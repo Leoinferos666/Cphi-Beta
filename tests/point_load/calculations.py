@@ -99,7 +99,7 @@ def calculate_qc(is50):
         if is50 is None:
             return None
 
-        return 24 * is50
+        return 22 * is50
 
     except:
         return None
